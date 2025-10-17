@@ -233,31 +233,26 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 \1
-  // Wait for the first auth state before applying editor UI
+  // Wait for the first auth state before rendering UI (no refresh needed)
   await new Promise((resolve) => {
     const unsub = onAuthStateChanged(auth, (u) => {
       __user = u || null;
       __isEditor = !!u && __ALLOWED.has((u.email || "").toLowerCase());
-      if (typeof __applyEditorUI === 'function') __applyEditorUI();
+      __applyEditorUI();
       unsub();
       resolve();
     });
   });
+// Apply editor UI immediately if a session is already present
+  if (auth.currentUser) {
+    const u = auth.currentUser;
+    __user = u;
+    __isEditor = __ALLOWED.has((u.email || "").toLowerCase());
+    __applyEditorUI();
+  }
 const db = getFirestore(app);
 const DATA_DOC = doc(db, "artistHub", "data");
 
-
-  // Live Firestore data (register early)
-  onSnapshot(DATA_DOC, (snap) => {
-  if (window.__state) {
-    if (snap.exists()) {
-      const data = snap.data() || {};
-      window.__state.artists = Array.isArray(data.artists) ? data.artists : [];
-    } else {
-      window.__state.artists = [];
-    }
-    if (typeof window.__render === "function") window.__render();
-  
 // Change these to your real editor emails:
 const ALLOWED_EMAILS = ["xq.dannybs@gmail.com", "dafuke88@gmail.com"];
 
@@ -275,8 +270,23 @@ onAuthStateChanged(auth, (u) => {
   __isEditor = !!u && __ALLOWED.has((u.email || "").toLowerCase());
   __applyEditorUI();
 
+
+});
+
 // Live Firestore sync; will update global state + re-render when available
-}
+onSnapshot(DATA_DOC, (snap) => {
+  if (window.__state) {
+    if (snap.exists()) {
+      const data = snap.data() || {};
+      window.__state.artists = Array.isArray(data.artists) ? data.artists : [];
+    } else {
+      window.__state.artists = [];
+    }
+    if (typeof window.__render === "function") window.__render();
+  }
+
+
+});
 
 // ===== End Firebase (added) =====
 
@@ -307,14 +317,28 @@ onAuthStateChanged(auth, (u) => {
     const STORAGE_KEY = 'artistHub.v1';
     const state = { artists: [], filter: '' };
 
-    function load(){
+    
+    // expose to Firebase listeners
+    window.__state = state;
+    window.__render = render;
+function load(){
       try{
         const raw = localStorage.getItem(STORAGE_KEY);
         if(raw){ state.artists = JSON.parse(raw); }
         else { state.artists = demo(); save(); }
       }catch(e){ console.warn('Load failed', e); state.artists = demo(); save(); }
     }
-    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.artists)); }
+    async function save(){
+  if (!__isEditor) { return; }
+  try {
+    await setDoc(DATA_DOC, { artists: state.artists }, { merge: true });
+    // optional: keep local cache for offline
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.artists));
+  } catch (e) {
+    console.error('Save failed:', e);
+    alert('Save failed: ' + (e?.message || e));
+  }
+}
 
     function demo(){
       return [
@@ -366,8 +390,8 @@ onAuthStateChanged(auth, (u) => {
           chip.title = link.url;
           chip.innerHTML = iconSVG(link.platform) + `<span>${link.platform}</span>`;
           links.appendChild(chip);
-
-        card.appendChild(links);
+    });
+    card.appendChild(links);
       }
 
       if(a.videos?.length){
@@ -376,8 +400,8 @@ onAuthStateChanged(auth, (u) => {
           const wrap = document.createElement('div'); wrap.className = 'video';
           wrap.innerHTML = `<iframe loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen src="https://www.youtube-nocookie.com/embed/${id}"></iframe>`;
           videos.appendChild(wrap);
-
-        card.appendChild(videos);
+    });
+    card.appendChild(videos);
       }
 
       return card;
@@ -439,6 +463,8 @@ onAuthStateChanged(auth, (u) => {
       }
       save(); render(); els.dialog.close();
 
+    });
+
     function resetLinksEditor(){ els.linksEditor.innerHTML = ''; }
 
     function addLinkInput(value=''){
@@ -489,6 +515,8 @@ onAuthStateChanged(auth, (u) => {
         if(ix < state.artists.length-1){ const [it] = state.artists.splice(ix,1); state.artists.splice(ix+1,0,it); save(); render(); }
       }
 
+    });
+
     // ---------- Toolbar ----------
     els.addBtn.addEventListener('click', openAdd);
 
@@ -500,6 +528,7 @@ onAuthStateChanged(auth, (u) => {
       const blob = new Blob([JSON.stringify(state.artists, null, 2)], {type:'application/json'});
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'artist-hub-export.json'; a.click(); setTimeout(()=> URL.revokeObjectURL(url), 2000);
+    });
 
     els.importFile.addEventListener('change', (e) => {
       const file = e.target.files?.[0]; if(!file) return;
@@ -514,6 +543,8 @@ onAuthStateChanged(auth, (u) => {
         finally { e.target.value = ''; }
       };
       reader.readAsText(file);
+
+    });
 
     // ---------- Search ----------
     els.search.addEventListener('input', () => { state.filter = els.search.value; render(); });
