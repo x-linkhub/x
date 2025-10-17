@@ -1,0 +1,1855 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon"
+  href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='96'>💀</text></svg>">
+  <title>Link Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>html,body{height:100%}body{margin:0}
+/* Boot overlay styles */
+.boot-overlay{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(120% 120% at 50% 0,#0b0b0b,#000);z-index:50}
+.boot-card{width:min(620px,92vw);border-radius:20px;border:1px solid #2a2a2a;background:rgba(18,18,18,.8);backdrop-filter:blur(6px);padding:26px 28px;box-shadow:0 10px 50px rgba(0,0,0,.5)}
+.boot-logo{font-size:42px;margin-bottom:6px;text-align:center;animation:bootPulse 1.6s ease-in-out infinite}
+.boot-title{font-weight:800;text-align:center;margin-bottom:10px;font-size:22px;letter-spacing:.3px}
+.boot-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.boot-list li{display:flex;justify-content:space-between;align-items:center;border:1px solid #333;border-radius:10px;padding:8px 10px;color:#cfcfcf;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+.boot-list li.ok{border-color:#00e38a;color:#b3ffd9;background:rgba(0,227,138,.12)}
+.boot-list li.err{border-color:#ff2da1;color:#ffc4e6;background:rgba(255,45,161,.12)}
+.boot-list li span{opacity:.8}
+.boot-hint{margin-top:12px;font-size:13px;color:#c3c7cf;text-align:center}
+
+.boot-list li.ok span{color:#00ffa3;font-weight:700}
+.boot-list li.err span{color:#ff4bb3;font-weight:700}
+@keyframes bootPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@media (prefers-reduced-motion: reduce){.boot-logo{animation:none}}
+boot-card">
+      <div class="boot-logo">💀</div>
+      <div class="boot-title">Link Hub</div>
+      <ul class="boot-list">
+        <li data-k="tailwind">Tailwind <span>…</span></li>
+        <li data-k="react">React <span>…</span></li>
+        <li data-k="reactdom">ReactDOM <span>…</span></li>
+        <li data-k="babel">Babel <span>…</span></li>
+        <li data-k="data">Data <span>…</span></li>
+        <li data-k="ui">UI <span>…</span></li>
+      </ul>
+      <div class="boot-hint">If it stalls, allow <code>unpkg.com</code> in your blocker.</div>
+    </div>
+  </div>
+
+  <div id="root"></div>
+
+  
+  <!-- Boot helpers -->
+  
+/* === Custom Themed Scrollbars (Light + Dark) =========================== */
+:root{
+  --sb-track: #f3f4f6;      /* light track (zinc-100) */
+  --sb-thumb: #c4c7cf;      /* light thumb (zinc-300) */
+  --sb-thumb-hover: #9ca3af;/* light hover (zinc-400) */
+}
+html.dark{
+  --sb-track: #0f1115;      /* dark track (near zinc-900) */
+  --sb-thumb: #3f3f46;      /* dark thumb (zinc-700) */
+  --sb-thumb-hover: #52525b;/* dark hover (zinc-600) */
+}
+
+/* Firefox */
+*{
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
+}
+
+/* WebKit (Chrome, Edge, Safari) */
+*::-webkit-scrollbar{
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-track{
+  background: var(--sb-track);
+}
+*::-webkit-scrollbar-thumb{
+  background: var(--sb-thumb);
+  border: 3px solid var(--sb-track);
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover{
+  background: var(--sb-thumb-hover);
+}
+*::-webkit-scrollbar-corner{
+  background: transparent;
+}
+
+/* Prevent layout shifts when scrollbars appear */
+body, main, .overflow-auto{
+  scrollbar-gutter: stable both-edges;
+}
+/* ====================================================================== */
+
+</style>
+</head>
+<body class="bg-zinc-900 text-zinc-100">
+  <!-- Boot Checks Overlay -->
+  <div id="boot" class="boot-overlay">
+    <div class="boot-card">
+      <div class="boot-logo">💀</div>
+      <div class="boot-title">Link Hub</div>
+      <ul class="boot-list">
+        <li data-k="tailwind">Tailwind <span>…</span></li>
+        <li data-k="react">React <span>…</span></li>
+        <li data-k="reactdom">ReactDOM <span>…</span></li>
+        <li data-k="babel">Babel <span>…</span></li>
+        <li data-k="data">Data <span>…</span></li>
+        <li data-k="ui">UI <span>…</span></li>
+      </ul>
+      <div class="boot-hint">If it stalls, allow <code>unpkg.com</code> in your blocker.</div>
+    </div>
+  </div>
+  <div id="root"></div>
+
+<script>
+    (function(){
+      function mark(k, ok, msg){
+        var li = document.querySelector('#boot .boot-list [data-k="'+k+'"]');
+        if(!li) return;
+        li.classList.remove('ok','err');
+        li.classList.add(ok ? 'ok' : 'err');
+        var span = li.querySelector('span');
+        if(span) span.textContent = ok ? '✓' : '×';
+        if(msg) li.title = msg;
+      }
+      window.__boot = function(k, msg){ mark(k, true, msg||''); };
+      window.__bootFail = function(k, msg){ mark(k, false, msg||''); };
+      window.__hideBoot = function(){
+        var el = document.getElementById('boot');
+        if(!el) return;
+        var start = window.__bootStart || Date.now();
+        var minMs = 2000; // ensure splash is visible at least this long
+        var elapsed = Date.now() - start;
+        var wait = Math.max(0, minMs - elapsed);
+        setTimeout(function(){
+          el.style.transition = 'opacity .7s ease';
+          el.style.opacity = '0';
+          setTimeout(function(){ el && el.remove && el.remove(); }, 750);
+        }, wait);
+      };
+      // Tailwind check (best-effort)
+      document.addEventListener('DOMContentLoaded', function(){
+        try { window.__boot('tailwind'); } catch(e){}
+        window.__bootStart = Date.now();
+        // Safety timeout (longer)
+        setTimeout(function(){ if(document.getElementById('boot')) window.__hideBoot(); }, 6000);
+      });
+    })();
+  </script>
+<!-- React 18 UMD + Babel for JSX in the browser -->
+  <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone/babel.min.js" onerror="var el=document.getElementById('overlay'); if(!el){el=document.createElement('div'); el.id='overlay'; document.body.appendChild(el);} el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);color:#fff;padding:16px;z-index:99999'; el.innerHTML = '<div style=\'max-width:900px;margin:40px auto;background:#111;padding:16px;border-radius:12px\'>Failed to load Babel from unpkg.com. Allow unpkg.com or disable script blocker.</div>';"></script>
+
+  <!-- Simple runtime error overlay so blank screens are obvious -->
+  <script>
+    window.addEventListener('error', function(e){
+      var el = document.getElementById('overlay');
+      if(!el){ el = document.createElement('div'); el.id='overlay'; document.body.appendChild(el); }
+      el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);color:#fff;padding:16px;z-index:99999;overflow:auto;font:14px/1.5 system-ui,Segoe UI,Roboto';
+      el.innerHTML = '<div style="max-width:900px;margin:40px auto;background:#111;padding:16px;border-radius:12px">'+
+        '<div style="font-weight:700;margin-bottom:8px">Runtime error</div>'+
+        '<pre style="white-space:pre-wrap">'+(e.error && e.error.stack || (e.message+'\n'+e.filename+':'+e.lineno))+'</pre>'+
+      '</div>';
+    });
+  </script>
+  <script>
+    window.addEventListener('unhandledrejection', function(e){
+      var el = document.getElementById('overlay');
+      if(!el){ el = document.createElement('div'); el.id='overlay'; document.body.appendChild(el); }
+      el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);color:#fff;padding:16px;z-index:99999;overflow:auto;font:14px/1.5 system-ui,Segoe UI,Roboto';
+      var msg = (e.reason && (e.reason.stack || e.reason.message)) || String(e.reason);
+      el.innerHTML = '<div style="max-width:900px;margin:40px auto;background:#111;padding:16px;border-radius:12px">'+
+        '<div style="font-weight:700;margin-bottom:8px">Promise Rejection</div>'+
+        '<pre style="white-space:pre-wrap">'+msg+'</pre>'+
+      '</div>';
+    });
+  </script>
+
+
+  
+  <!-- Firebase (Compat) for Google Sign-In) -->
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script>
+  window.__FIREBASE_CONFIG = {
+    apiKey: "AIzaSyBvWLRZjEyldAYZXfK6KV2H9_P5fLOsGMw",
+    authDomain: "link-library-1dfc8.firebaseapp.com",
+    projectId: "link-library-1dfc8",
+    storageBucket: "link-library-1dfc8.firebasestorage.app",
+    messagingSenderId: "368329977627",
+    appId: "1:368329977627:web:625d20247d6aea3b9cadbe"
+  };
+  try {
+    if (!window.firebaseApp) {
+      window.firebaseApp = firebase.initializeApp(window.__FIREBASE_CONFIG);
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    }
+    window.__boot && window.__boot('data', 'Firebase ready');
+  } catch (e) {
+    console.error('Firebase init error', e);
+    window.__bootFail && window.__bootFail('data', 'Firebase init failed');
+  }
+</script>
+
+<script type="text/babel">
+    const { useMemo, useState, useEffect, useRef } = React;
+	
+    // === Firebase handles (Compat) ============================================
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    // === Who is allowed to add/edit/delete/pin (UI gating only) ===============
+    const ALLOWED_EDITOR_EMAILS = new Set([
+    "xq.dannybs@gmail.com",
+    "dafuke88@gmail.com"
+    ]);
+
+    // Auth helpers
+    async function signInWithGoogle(){
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    }
+    async function signOutGoogle(){
+    await auth.signOut();
+    }
+
+    // --- Sample Data ---------------------------------------------------------
+    const SAMPLE_LINKS = [
+      { id: '1', title: 'Example Domain', url: 'https://example.com', desc: 'This domain is for illustrative examples in docs.', categories: ['Pinned'], subcategories: ['General'], tags: ['example','docs'], pinned: true, bookmarked: true },
+      { id: '2', title: 'OpenAI', url: 'https://openai.com', desc: 'Research and products in AI.', categories: ['News & Tech'], subcategories: ['AI'], tags: ['ai','research'], pinned: false, bookmarked: true },
+      { id: '3', title: 'Wikipedia', url: 'https://wikipedia.org', desc: 'Free encyclopedia with community-curated knowledge.', categories: ['Learning'], subcategories: ['Reference'], tags: ['reference','facts'], pinned: false, bookmarked: false },
+      { id: '4', title: 'DuckDuckGo', url: 'https://duckduckgo.com', desc: 'Search the web without tracking.', categories: ['Web Tools'], subcategories: ['Search'], tags: ['search','privacy'], pinned: false, bookmarked: false },
+      { id: '5', title: 'MDN Web Docs', url: 'https://developer.mozilla.org/', desc: 'Documentation for web developers.', categories: ['Learning'], subcategories: ['Web Dev'], tags: ['docs','web'], pinned: false, bookmarked: true },
+    ];
+
+    const DEFAULT_CATEGORY_ICON = '🗂';
+    const DEFAULT_SUBCATEGORY_ICON = '📁';
+
+    const START_CATEGORY_ICONS = { 'pinned':'📌','bookmarks':'⭐','projects':'🧩','news & tech':'📰','music':'🎧','learning':'🧠','web tools':'🌐','utilities':'⚙️','games':'🕹','creative':'🪄' };
+    const START_SUBCATEGORY_ICONS = { 'general':'📁','ai':'🤖','reference':'📚','web dev':'🌍','search':'🔍','python':'🐍','firebase':'🔥' };
+
+    const COMMON_EMOJIS = ['🧠','📰','🌐','⚙️','🎧','🕹','🪄','📚','🔍','🐍','🔥','💡','📁','🗂','⭐','📌','🔖','💻','📦','🧰','🧪','🎨','📈','🛠','🏷','🔗'];
+    const RESERVED_CATEGORY_KEYS = new Set(['pinned','bookmarks']);
+	const RESERVED_EMOJIS = new Set(['📌','⭐']);
+	
+    // --- Utils ---------------------------------------------------------------
+    const getDomain = (url) => { try { return new URL(url).hostname.replace(/^www\./,''); } catch { return url; } };
+    const faviconFor = (url) => { try { const d = new URL(url).hostname; return `https://www.google.com/s2/favicons?sz=64&domain=${d}`; } catch { return ''; } };
+    const normKey = (s) => (s||'').trim().toLowerCase();
+    const pairKey = (cat, sub) => (normKey(cat||'') + '|' + normKey(sub||''));
+    const titleCase = (s) => (s||'').trim().replace(/\s+/g,' ').toLowerCase().replace(/(^|\s)\S/g, c=>c.toUpperCase());
+    const uniqueTags = (arr=[]) => {
+    const seen = new Set();
+    const out = [];
+      for (let t of arr) {
+    const s = (t || '').trim();
+    if (!s) continue;
+    const key = s.toLowerCase();
+    if (!seen.has(key)) { seen.add(key); out.push(s); }
+  }
+  return out;
+};
+
+    // --- Remote preview (Microlink) -----------------------------------------
+    async function fetchPreview(url){
+      try{
+        const res = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}&audio=false&video=false`);
+        if(!res.ok) throw new Error('preview fail');
+        const data = await res.json();
+        const d = data?.data || {};
+        return { title: d.title||'', description: d.description||'', image: d.image?.url||'', publisher: d.publisher || getDomain(url) };
+      }catch{ return null; }
+    }
+
+    // --- Click outside hook --------------------------------------------------
+    function useClickOutside(ref, onOutside){
+      useEffect(()=>{
+        function h(e){ if(ref.current && !ref.current.contains(e.target)) onOutside(); }
+        document.addEventListener('mousedown', h);
+        return ()=> document.removeEventListener('mousedown', h);
+      }, [ref, onOutside]);
+    }
+
+    // --- Small Emoji Picker Popover (MVP) -----------------------------------
+    function EmojiPickerPopover({ onPick, onClose }){
+      const ref = useRef(null);
+      useClickOutside(ref, onClose);
+      const [custom, setCustom] = useState('');
+      return (
+        <div ref={ref} className="absolute z-30 mt-1 w-64 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg p-2">
+          <div className="text-xs text-zinc-500 mb-2">Pick an emoji</div>
+          <div className="grid grid-cols-8 gap-1 mb-2 text-lg">
+            {COMMON_EMOJIS.map(e => (
+              <button key={e} onClick={()=>{ onPick(e); onClose(); }} className="px-1 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">{e}</button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            <input value={custom} onChange={e=>setCustom(e.target.value)} placeholder="paste emoji" className="flex-1 text-sm px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 outline-none" />
+            <button onClick={()=>{ if(custom.trim()){ onPick(custom.trim()); onClose(); } }} className="text-sm px-2 py-1 rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">Set</button>
+          </div>
+        </div>
+      );
+    }
+
+    // --- Top Bar -------------------------------------------------------------
+    function TopBar({ query, setQuery, onSearchGo, onAddLink, searchScope, setSearchScope, tagOptions, onOpenSettings, totalCount, user, onLogin, onLogout, isEditor}){
+      const inputRef = React.useRef(null);
+      const [showTagSuggest, setShowTagSuggest] = React.useState(false);
+      const [tagItems, setTagItems] = React.useState([]);
+      const [tagActiveIndex, setTagActiveIndex] = React.useState(-1);
+      const [acctOpen, setAcctOpen] = React.useState(false);
+      const acctRef = React.useRef(null);
+      useClickOutside(acctRef, ()=> setAcctOpen(false));
+	  
+      // Compute suggestions for the last #fragment in the input
+      const computeSuggestions = (text)=>{
+        const m = text.match(/#([\S]*)$/); // match last token starting with #
+        if(!m) return { start:-1, items:[] };
+        const start = m.index;
+        const frag = (m[1] || '').toLowerCase();
+        const items = (tagOptions||[]).filter(t => t.toLowerCase().startsWith(frag));
+        return { start, items };
+      };
+
+      const applyTag = (tag)=>{
+        const v = query || '';
+        const m = v.match(/#([\S]*)$/);
+        if(!m) return;
+        const start = m.index;
+        const next = v.slice(0, start) + '#' + tag + ' ';
+        setQuery(next);
+        setShowTagSuggest(false);
+        setTimeout(()=> inputRef.current && inputRef.current.focus(), 0);
+      };
+
+      const onInputChange = (e)=>{
+        const v = e.target.value;
+        setQuery(v);
+        const s = computeSuggestions(v);
+        setTagItems(s.items);
+        const open = s.start >= 0 && s.items.length > 0;
+		setShowTagSuggest(open);
+		setTagActiveIndex(open ? 0 : -1);
+      };
+
+       const onInputKeyDown = (e)=>{
+   const open = showTagSuggest && tagItems.length > 0;
+   const visibleCount = Math.min(8, tagItems.length);
+   if(open){
+     if(e.key === 'ArrowDown'){
+       e.preventDefault();
+       setTagActiveIndex(i => (i + 1) % visibleCount);
+       return;
+     }
+     if(e.key === 'ArrowUp'){
+       e.preventDefault();
+       setTagActiveIndex(i => (i - 1 + visibleCount) % visibleCount);
+       return;
+     }
+     if(e.key === 'Enter' || e.key === 'Tab'){
+       e.preventDefault();
+       const pick = tagItems[(tagActiveIndex >= 0 ? tagActiveIndex : 0)];
+       applyTag(pick);
+       return;
+     }
+     if(e.key === 'Escape'){
+       setShowTagSuggest(false);
+       setTagActiveIndex(-1);
+       return;
+     }
+   }
+   if(e.key === 'Enter') onSearchGo();
+      };
+
+      return (
+        <div className="flex items-center gap-2 p-3 border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-900/70 backdrop-blur sticky top-0 z-10">
+          {/* Search scope toggle */}
+          <div className="shrink-0">
+            <div className="inline-flex rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden text-sm">
+              <button
+                onClick={()=> setSearchScope('all')}
+                className={`px-3 py-1.5 ${searchScope==='all' ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                title="Search across all links"
+              >
+                All
+              </button>
+              <button
+                onClick={()=> setSearchScope('category')}
+                className={`px-3 py-1.5 ${searchScope==='category' ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
+                title="Search only in current category"
+              >
+                Category
+              </button>
+            </div>
+          </div>
+
+          {/* Search input with clear button and tag autocomplete */}
+          <div className="relative flex-1 max-w-xl">
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={onInputChange}
+              onKeyDown={onInputKeyDown}
+              placeholder="Search links or DuckDuckGo — try typing #tag"
+              className="w-full rounded-2xl pl-10 pr-16 py-2 outline-none bg-zinc-100 dark:bg-zinc-800 border border-transparent focus:border-zinc-300 dark:focus:border-zinc-700 text-sm" />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 select-none">🔎</span>
+
+            {/* Clear (X) button */}
+            {query ? (
+              <button
+                onClick={()=>{ setQuery(''); setShowTagSuggest(false); inputRef.current && inputRef.current.focus(); }}
+                className="absolute right-8 top-1/2 -translate-y-1/2 text-base px-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                title="Clear"
+              >×</button>
+            ) : null}
+
+            {/* External search button */}
+            <button onClick={onSearchGo} title="Search with DuckDuckGo" className="absolute right-2 top-1/2 -translate-y-1/2 text-xl">↗</button>
+
+            {/* Tag suggestions */}
+            {showTagSuggest && tagItems.length>0 ? (
+      <div
+            className="absolute left-0 right-0 mt-1 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-lg z-20 p-1"
+            role="listbox"
+   >
+            {tagItems.slice(0,8).map((t, i) => (
+            <button
+            key={t}
+            role="option"
+            aria-selected={i === tagActiveIndex}
+            onMouseEnter={()=> setTagActiveIndex(i)}
+            onMouseDown={(e)=> e.preventDefault()}  // keep input focus
+            onClick={()=> applyTag(t)}
+            className={
+           "w-full text-left px-3 py-2 rounded-lg text-sm " +
+           (i === tagActiveIndex
+             ? "bg-zinc-100 dark:bg-zinc-800"
+             : "hover:bg-zinc-100 dark:hover:bg-zinc-800")
+         }
+       >
+         #{t}
+       </button>
+     ))}
+   </div>
+ ) : null}
+          </div>
+          
+          {/* Total links count pill */}
+          <div className="hidden sm:inline-flex items-center rounded-full border border-emerald-500/30 bg-gradient-to-r from-emerald-600/20 to-fuchsia-600/20 px-3 py-1 text-xs font-medium text-emerald-200 select-none">
+            <span className="opacity-80 mr-1">Saved:</span>
+            <span className="font-bold text-emerald-300">{totalCount}</span>
+            <span className="opacity-80 ml-1">/ URLs</span>
+          </div>
+
+                    {/* Account (Google) */}
+          {user ? (
+            <div className="relative" ref={acctRef}>
+              <button onClick={()=> setAcctOpen(v=>!v)} title={user.displayName||'Account'} className="rounded-full p-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <img alt="" src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-zinc-300 dark:border-zinc-700" />
+              </button>
+              {acctOpen && (
+                <div className="absolute right-0 mt-2 z-30 min-w-56 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg p-2">
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <img alt="" src={user.photoURL || ''} className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">{user.displayName || 'Signed in'}</div>
+                      <div className="text-xs text-zinc-500 truncate">{user.email || ''}</div>
+                    </div>
+                  </div>
+                  <div className="border-t border-zinc-200 dark:border-zinc-800 my-1"></div>
+                  <button onClick={()=>{ setAcctOpen(false); onLogout && onLogout(); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm">Sign out</button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button onClick={onLogin} className="rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Sign in with Google" aria-label="Sign in with Google">
+              {/* Google G icon (SVG) */}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="22" height="22" aria-hidden="true">
+                <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.88 31.91 29.333 35 24 35 16.82 35 11 29.18 11 22S16.82 9 24 9c3.59 0 6.84 1.36 9.34 3.58l5.66-5.66C35.9 3.05 30.23 1 24 1 11.85 1 2 10.85 2 23s9.85 22 22 22c11 0 21-8 21-22 0-1.3-.14-2.56-.389-3.917z"/>
+                <path fill="#FF3D00" d="M6.306 14.691l6.571 4.818C14.65 16.123 18.96 13 24 13c3.59 0 6.84 1.36 9.34 3.58l5.66-5.66C35.9 3.05 30.23 1 24 1 15.316 1 7.846 5.835 4.171 13.064l2.135 1.627z"/>
+                <path fill="#4CAF50" d="M24 45c5.2 0 10-1.8 13.71-4.86l-6.33-5.18C29.67 36.81 26.96 38 24 38c-5.31 0-9.8-3.42-11.41-8.17l-6.53 5.03C9.73 41.25 16.39 45 24 45z"/>
+                <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.04 4.13-5.07 7-11.303 7-7.18 0-13-5.82-13-13S16.82 9 24 9c3.59 0 6.84 1.36 9.34 3.58l5.66-5.66C35.9 3.05 30.23 1 24 1c-12.15 0-22 9.85-22 22s9.85 22 22 22c11 0 21-8 21-22 0-1.3-.14-2.56-.389-3.917z"/>
+              </svg>
+            </button>
+          )}
+		  {isEditor && (
+          <button onClick={onOpenSettings} className="rounded-full px-3 py-2 text-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Settings">⚙️</button>
+		  )}
+		  {isEditor && (
+          <button onClick={onAddLink} className="rounded-full px-3 py-2 text-lg hover:bg-zinc-100 dark:hover:bg-zinc-800" title="Add link">➕</button>
+		  )}
+		  <a
+           href="artist-hub.html"
+           className="ml-auto inline-flex items-center gap-1 rounded-xl border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-sm whitespace-nowrap hover:bg-zinc-100 dark:hover:bg-zinc-800"
+           title="Artist Hub"
+           >
+           Artist Hub →
+        </a>
+        </div>
+      );
+    }
+
+    // --- Sidebar (counts + collapsible + Quick) -----------------------------
+    function Sidebar({ allLinks, activeCat, setActiveCat, activeSub, setActiveSub, categoryIcons, subcategoryIcons, bookmarkSet }){
+      const structure = useMemo(()=>{
+        // Regular categories with counts
+        const byCat = new Map(); // key -> { key,label, subs:Set, subCounts:Map, count }
+        const ensureCat = (raw)=>{ const key=normKey(raw||'General'); if(!byCat.has(key)) byCat.set(key,{ key, label:(raw||'General').trim(), subs:new Set(), subCounts:new Map(), count:0 }); return byCat.get(key); };
+        const bump = (m,k)=> m.set(k,(m.get(k)||0)+1);
+        for(const l of allLinks){
+          const cats = l.categories?.length ? l.categories : ['General'];
+          const subs = l.subcategories?.length ? l.subcategories : ['General'];
+          for(const c of cats){ const ce=ensureCat(c); ce.count+=1; for(const s of subs){ ce.subs.add(s); bump(ce.subCounts,s); } }
+        }
+        // Pinned/Bookmarks from flags (per-user bookmarks via bookmarkSet)
+const pinned    = { key:'pinned',    label:'Pinned',    subs:new Set(), subCounts:new Map(), count:0 };
+const bookmarks = { key:'bookmarks', label:'Bookmarks', subs:new Set(), subCounts:new Map(), count:0 };
+
+for (const l of allLinks) {
+  const subs = l.subcategories?.length ? l.subcategories : ['General'];
+
+  if (l.pinned) {
+    pinned.count++;
+    subs.forEach(s => { pinned.subs.add(s); bump(pinned.subCounts, s); });
+  }
+
+  // per-user bookmarks
+  if (bookmarkSet && bookmarkSet.has(l.id)) {
+    bookmarks.count++;
+    subs.forEach(s => { bookmarks.subs.add(s); bump(bookmarks.subCounts, s); });
+  }
+}
+
+const header = [
+  { ...pinned,    subs:new Set([...pinned.subs].sort((a,b)=>a.localeCompare(b))) },
+  { ...bookmarks, subs:new Set([...bookmarks.subs].sort((a,b)=>a.localeCompare(b))) }
+];
+const headerKeys = new Set(header.map(h => h.key));
+const others = [...byCat.values()]
+  .filter(c => !headerKeys.has(c.key))
+  .sort((a,b)=>a.label.localeCompare(b.label));
+for (const c of others) {
+  c.subs = new Set([...c.subs].sort((a,b)=>a.localeCompare(b)));
+}
+return { header, others };
+      }, [allLinks, bookmarkSet]);
+
+      const [open, setOpen] = useState(new Set());
+      const toggle = (label)=> setOpen(p=>{ const n=new Set(p); const k=normKey(label); n.has(k)?n.delete(k):n.add(k); return n; });
+      const isOpen = (label)=> open.has(normKey(label));
+
+      const catIcon = (label)=>{
+        const k = normKey(label);
+        if (k === 'pinned') return '📌';
+        if (k === 'bookmarks') return '⭐';
+        const val = categoryIcons[k];
+        if (RESERVED_EMOJIS.has(val)) return DEFAULT_CATEGORY_ICON;
+        return val || DEFAULT_CATEGORY_ICON;
+    };
+      const subIcon = (label)=>{
+        const k = normKey(label);
+        const val = subcategoryIcons[k];
+        if (RESERVED_EMOJIS.has(val)) return DEFAULT_SUBCATEGORY_ICON;
+        return val || DEFAULT_SUBCATEGORY_ICON;
+    };
+
+      return (
+        <aside className="w-64 shrink-0 p-3 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+          <div className="mb-3">
+            <div className="text-xs uppercase tracking-wide text-zinc-500 mb-2">Quick</div>
+            {structure.header.map(h=> (
+              <div key={h.key} className="mb-1">
+                <button onClick={()=>{ toggle(h.label); setActiveCat(h.label); setActiveSub(undefined); }} className={`w-full flex items-center gap-2 px-2 py-1 rounded-xl border ${normKey(activeCat)===h.key && !activeSub ? 'border-zinc-400 dark:border-zinc-600' : 'border-zinc-200 dark:border-zinc-800'} hover:bg-zinc-100 dark:hover:bg-zinc-800`}>
+                  <span>{catIcon(h.label)}</span>
+                  <span className="truncate flex-1 text-left">{h.label}</span>
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800">{h.count}</span>
+                  <span className="opacity-60 text-xs">{isOpen(h.label)?'▾':'▸'}</span>
+                </button>
+                {isOpen(h.label) && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {[...h.subs].map(s=> (
+                      <button key={s} onClick={()=>{ setActiveCat(h.label); setActiveSub(s); }} className={`w-full flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm ${normKey(activeCat)===h.key && normKey(activeSub)===normKey(s) ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}>
+                        <span className="opacity-80">{subIcon(s)}</span>
+                        <span className="truncate flex-1 text-left">{s}</span>
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800">{h.subCounts?.get ? (h.subCounts.get(s)||0) : 0}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="text-sm font-semibold mb-2">Categories</div>
+          <nav className="space-y-1">
+            {structure.others.map(cat => (
+              <div key={cat.key}>
+                <button onClick={()=>toggle(cat.label)} className={`w-full flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-800 ${normKey(activeCat)===cat.key && !activeSub ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}>
+                  <span>{catIcon(cat.label)}</span>
+                  <span className="truncate flex-1 text-left">{cat.label}</span>
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800">{cat.count || 0}</span>
+                  <span className="opacity-60 text-xs">{isOpen(cat.label)?'▾':'▸'}</span>
+                </button>
+                {isOpen(cat.label) && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {[...cat.subs].map(s => (
+                      <button key={s} onClick={()=>{ setActiveCat(cat.label); setActiveSub(s); }} className={`w-full flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-sm ${normKey(activeCat)===cat.key && normKey(activeSub)===normKey(s) ? 'bg-zinc-100 dark:bg-zinc-800' : ''}`}>
+                        <span className="opacity-80">{subIcon(s)}</span>
+                        <span className="truncate flex-1 text-left">{s}</span>
+                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800">{cat.subCounts?.get ? (cat.subCounts.get(s)||0) : 0}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+        </aside>
+      );
+    }
+
+    // --- Card Menu -----------------------------------------------------------
+    function CardMenu({ onEdit, onDelete, onClose }){
+      const box = useRef(null);
+      useClickOutside(box, onClose);
+      return (
+        <div ref={box} className="absolute right-0 top-8 z-20 min-w-28 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg p-1 text-sm">
+          <button onClick={()=>{ onEdit(); onClose(); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">Edit</button>
+          <button onClick={()=>{ onDelete(); onClose(); }} className="w-full text-left px-3 py-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">Delete</button>
+        </div>
+      );
+    }
+
+    // --- Link Card -----------------------------------------------------------
+    function LinkCard({ link, active, onSelect, onTogglePin, onToggleBookmark, onEdit, onRemove, highlightTags = [], isEditor }){
+      const [menuOpen, setMenuOpen] = useState(false);
+      const menuWrap = useRef(null);
+      useClickOutside(menuWrap, ()=>setMenuOpen(false));
+      return (
+        <div className="relative">
+          <button onClick={()=>onSelect(link)} className={`w-full text-left rounded-2xl p-3 border ${active ? 'border-zinc-400 dark:border-zinc-600' : 'border-transparent'} bg-zinc-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800`}>
+            <div className="flex items-start gap-3">
+              <img alt="" src={faviconFor(link.url)} className="w-8 h-8 md:w-9 md:h-9 rounded shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="block font-semibold text-[15px] leading-snug break-words pr-2">{link.title}</div>
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">{getDomain(link.url)}</div>
+                {/* Tag chips with search highlight */}
+                {(link.tags && link.tags.length > 0) && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {link.tags.map(t => {
+                      const isHit = highlightTags.includes((t||'').trim().toLowerCase());
+                      return (
+                        <span
+                          key={t}
+                          className={
+                            "text-[12px] md:text-[13px] leading-[1.2] px-2.5 py-0.5 rounded-full border " +
+                            (isHit
+                              ? "border-teal-500/50 bg-teal-500/15 ring-2 ring-teal-400/30"
+                              : "border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800")
+                          }
+                          title={isHit ? "Matched search tag" : undefined}
+                        >
+                          #{t}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="mt-1">
+                  <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={e=> e.stopPropagation()} className="text-xs text-blue-400 hover:underline">Open ↗</a>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-xl">{isEditor && (<button onClick={(e)=>{ e.stopPropagation(); onTogglePin(link.id, !!link.pinned); }} title="Pin">{link.pinned?'📌':'📍'}</button>
+                     )}
+                <button
+    onClick={(e) => { e.stopPropagation(); onToggleBookmark(link.id); }}
+    title="Bookmark"
+    className="text-base px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+  >
+    {link.__bookmarkedByMe ? '⭐' : '☆'}
+  </button>
+                {isEditor && (
+    <div className="relative">
+      <button
+        onClick={(e)=>{ e.stopPropagation(); setMenuOpen(v=>!v); }}
+        title="More"
+        className="text-base px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
+      >⋯</button>
+      {menuOpen && (
+        <CardMenu
+          onEdit={()=>onEdit(link)}
+          onDelete={()=>onRemove(link.id)}
+          onClose={()=>setMenuOpen(false)}
+        />
+      )}
+    </div>
+  )}
+</div>
+            </div>
+          </button>
+        </div>
+      );
+    }
+
+function DetailsPanel({ link, getPreview, onAddTag, onRemoveTag }){
+  const [meta, setMeta] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [newTag, setNewTag] = useState('');
+
+  useEffect(()=>{
+    let mounted = true; setMeta(null); if(!link) return;
+    (async()=>{ setLoading(true); const p = await getPreview(link.url); if(mounted){ setMeta(p); setLoading(false); } })();
+    return ()=>{ mounted = false; };
+  }, [link, getPreview]);
+
+  const tryAddTag = () => {
+    const v = (newTag || '').trim();
+    if (!v) return;
+    onAddTag(link.id, v);
+    setNewTag('');
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      tryAddTag();
+    }
+  };
+
+  if(!link) {
+    return (
+      <aside className="w-80 shrink-0 p-4 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+        <div className="text-sm text-zinc-500">Select a link to see details.</div>
+      </aside>
+    );
+  }
+
+  return (
+    <aside className="w-80 shrink-0 p-4 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+      <div className="flex items-center gap-3 mb-3">
+        <img alt="" src={faviconFor(link.url)} className="w-8 h-8 md:w-9 md:h-9 rounded shrink-0" />
+        <div className="min-w-0">
+          <div className="font-semibold truncate">{link.title}</div>
+		  <a className="text-xs text-cyan-500 dark:text-cyan-400 hover:text-cyan-400 dark:hover:text-cyan-300 hover:underline break-all" href={link.url} target="_blank" rel="noreferrer">{link.url}</a>
+        </div>
+      </div>
+
+      <div className="mb-3 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+        <div className="p-3">
+          <div className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Site preview</div>
+          {loading && <div className="text-sm text-zinc-500">Fetching info…</div>}
+          {!loading && meta && (<>
+            {meta.image && <div className="mb-2"><img alt="" src={meta.image} className="w-full h-28 object-cover" /></div>}
+            <div className="font-medium mb-1">{meta.title || link.title}</div>
+            <div className="text-sm text-zinc-600 dark:text-zinc-300 whitespace-pre-wrap">{meta.description || 'No description found.'}</div>
+            <div className="mt-1 text-xs text-zinc-500">{meta.publisher}</div>
+          </>)}
+          {!loading && !meta && <div className="text-sm text-zinc-500">No preview available.</div>}
+        </div>
+      </div>
+
+      <div className="mb-2 text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">Notes</div>
+      <p className="text-sm mb-3 whitespace-pre-wrap">{link.desc}</p>
+
+      {/* Tags editor */}
+      <div className="mb-2 text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">Tags</div>
+      <div className="flex flex-wrap gap-2 mb-2">
+        {(link.tags || []).map(t => (
+          <span key={t} className="group text-xs px-2 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center gap-1">
+            #{t}
+            <button
+              className="opacity-60 group-hover:opacity-100 -mr-1 ml-1 rounded px-1 hover:bg-zinc-200 dark:hover:bg-zinc-700"
+              title="Remove"
+              onClick={()=> onRemoveTag(link.id, t)}
+            >×</button>
+          </span>
+        ))}
+        {(link.tags || []).length === 0 && <span className="text-xs text-zinc-500">No tags yet.</span>}
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          value={newTag}
+          onChange={e=>setNewTag(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder="Add tag… (Enter)"
+          className="flex-1 rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700 text-sm" />
+        <button onClick={tryAddTag} className="px-2 py-1 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm">Add</button>
+      </div>
+
+      <div className="mt-4 text-xs text-zinc-500">{link.categories.join(', ')} · {(link.subcategories||[]).join(', ')}</div>
+    </aside>
+  );
+}
+
+// --- Add/Edit Modal (strict URL + title required, auto-prepend https://, stacked fields, empty defaults in Add) --------------
+function AddEditLinkModal({
+  mode='add',
+  initial={},
+  onClose,
+  onSubmit,
+  categories,
+  subcategories,
+  categoryIcons,
+  subcategoryIcons,
+  onPickCatEmoji,
+  onPickSubEmoji
+}){
+  const isEdit = mode === 'edit';
+
+  const [title, setTitle] = React.useState(isEdit ? (initial.title || '') : '');
+  const [url, setUrl] = React.useState(isEdit ? (initial.url || '') : '');
+  const [desc, setDesc] = React.useState(isEdit ? (initial.desc || '') : '');
+  const [category, setCategory] = React.useState(isEdit ? (initial.categories?.[0] || '') : '');
+  const [subcategory, setSubcategory] = React.useState(isEdit ? (initial.subcategories?.[0] || '') : '');
+  const [tags, setTags] = React.useState(isEdit ? ([...(initial.tags || [])]) : []); // only used in edit mode
+
+  const [openCatEmoji, setOpenCatEmoji] = React.useState(false);
+  const [openSubEmoji, setOpenSubEmoji] = React.useState(false);
+  const [showErrors, setShowErrors] = React.useState(false);
+
+  const isValidHttpUrlStrict = (value) => {
+    const v = (value || '').trim();
+    try {
+      const u = new URL(v);
+      if (!(u.protocol === 'http:' || u.protocol === 'https:')) return false;
+      const host = u.hostname || '';
+      if (!/^[a-z0-9-]+(\.[a-z0-9-]+)+$/i.test(host)) return false; // require a dot
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const titleMissing = !(title || '').trim();
+  const urlMissing = !(url || '').trim();
+  const urlInvalid = !urlMissing && !isValidHttpUrlStrict(url);
+
+  const isReservedCat = RESERVED_CATEGORY_KEYS.has(normKey(category||''));
+  const catEmoji = isReservedCat
+   ? (normKey(category)==='pinned' ? '📌' : '⭐')
+   : (category ? (categoryIcons[normKey(category)] || '') : '');
+  const subEmoji = subcategory ? (subcategoryIcons[normKey(subcategory)] || '') : '';
+
+  const handleUrlBlur = () => {
+    const v = (url || '').trim();
+    if (!v) return;
+    const hasScheme = /^[a-zA-Z][\w+.-]*:/.test(v);
+    if (!hasScheme) setUrl(`https://${v}`);
+  };
+
+  const addTagLocal = (raw) => {
+    const val = (raw || '').trim();
+    if (!val) return;
+    setTags(prev => uniqueTags([...(prev||[]), val]));
+  };
+  const removeTagLocal = (tag) => {
+    setTags(prev => (prev || []).filter(t => normKey(t) !== normKey(tag)));
+  };
+
+  const [newTag, setNewTag] = React.useState('');
+  const tryAddTag = () => { addTagLocal(newTag); setNewTag(''); };
+  const onTagKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); tryAddTag(); }
+  };
+
+  const handleSave = () => {
+    if (titleMissing || urlMissing || urlInvalid) {
+      setShowErrors(true);
+      return;
+    }
+    onSubmit({
+      title: title.trim() || url.trim(),
+      url: url.trim(),
+      desc,
+      categories: [category || 'Bookmarks'],
+      subcategories: [subcategory || 'General'],
+      // Only pass tags from modal in Edit mode; in Add mode keep it empty
+      tags: isEdit ? uniqueTags(tags) : [],
+      pinned: initial.pinned ?? false,
+      bookmarked: initial.bookmarked ?? true
+    });
+  };
+
+  const saveDisabled = titleMissing || urlMissing || urlInvalid;
+
+  return (
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="w-full max-w-3xl rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 shadow-2xl">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-lg font-semibold">{isEdit ? 'Edit Link' : 'Add Link'}</div>
+          <button onClick={onClose} className="text-xl">✕</button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Left: Main fields */}
+          <div className="lg:col-span-2 space-y-3">
+            {/* Title */}
+            <label className="block text-sm">
+              <div className="mb-1 text-zinc-600 dark:text-zinc-300">Title</div>
+              <input
+                value={title}
+                onChange={e=>{ setTitle(e.target.value); if (showErrors) setShowErrors(false); }}
+                placeholder="e.g., MDN Web Docs"
+                className={`w-full rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2
+                  ${showErrors && titleMissing ? 'ring-red-500 focus:ring-red-500' : 'focus:ring-zinc-300 dark:focus:ring-zinc-700'}`} />
+              {showErrors && titleMissing && (<div className="mt-1 text-xs text-red-600">Title is required.</div>)}
+            </label>
+
+            {/* URL */}
+            <label className="block text-sm">
+              <div className="mb-1 text-zinc-600 dark:text-zinc-300">URL</div>
+              <input
+                value={url}
+                onChange={e=>{ setUrl(e.target.value); if (showErrors) setShowErrors(false); }}
+                onBlur={handleUrlBlur}
+                placeholder="https://example.com/page"
+                className={`w-full rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2
+                  ${showErrors && (urlMissing || urlInvalid) ? 'ring-red-500 focus:ring-red-500' : 'focus:ring-zinc-300 dark:focus:ring-zinc-700'}`} />
+              <div className="mt-1 text-[11px] text-zinc-500">Tip: type <span className="font-mono">example.com</span> — we’ll add <span className="font-mono">https://</span> for you.</div>
+              {showErrors && urlMissing && (<div className="mt-1 text-xs text-red-600">URL is required.</div>)}
+              {showErrors && !urlMissing && urlInvalid && (
+                <div className="mt-1 text-xs text-red-600">
+                  Enter a valid URL that starts with <span className="font-mono">http://</span> or <span className="font-mono">https://</span> and has a dot in the hostname.
+                </div>
+              )}
+            </label>
+
+            <Input label="Your description / notes" value={desc} onChange={setDesc} textarea />
+
+            {/* Category & Subcategory (stacked) */}
+            <div className="grid grid-cols-1 gap-3">
+              <div className="relative">
+                <div className="mb-1 text-sm text-zinc-600 dark:text-zinc-300">Category</div>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <button disabled={isReservedCat}
+                    onClick={()=>setOpenCatEmoji(v=>!v)}
+                      className={`w-10 h-10 flex items-center justify-center text-2xl leading-none rounded-xl bg-zinc-100 dark:bg-zinc-800 ${isReservedCat ? 'opacity-60 cursor-not-allowed' : 'hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}
+                      title={isReservedCat ? 'Emoji locked for this category' : 'Pick emoji'}>
+                      {catEmoji || '‎'}
+                    </button>
+                    {openCatEmoji && !isReservedCat && (
+                      <div className="absolute left-0 mt-2">
+                        <EmojiPickerPopover onPick={(e)=> onPickCatEmoji(category, e)} onClose={()=>setOpenCatEmoji(false)} />
+                      </div>
+                    )}
+                  </div>
+                  <input list="category-list" value={category} onChange={e=> setCategory(e.target.value)} placeholder="" className="flex-1 rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700" />
+                  <datalist id="category-list">{categories.map(opt=> (<option key={opt} value={opt} />))}</datalist>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="mb-1 text-sm text-zinc-600 dark:text-zinc-300">Subcategory</div>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <button onClick={()=>setOpenSubEmoji(v=>!v)} className="w-10 h-10 flex items-center justify-center text-2xl leading-none rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700" title="Pick emoji">
+                      {subEmoji || '‎'}
+                    </button>
+                    {openSubEmoji && (
+                      <div className="absolute left-0 mt-2">
+                        <EmojiPickerPopover onPick={(e)=> onPickSubEmoji(subcategory, e)} onClose={()=>setOpenSubEmoji(false)} />
+                      </div>
+                    )}
+                  </div>
+                  <input list="subcategory-list" value={subcategory} onChange={e=> setSubcategory(e.target.value)} placeholder="" className="flex-1 rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700" />
+                  <datalist id="subcategory-list">{subcategories.map(opt=> (<option key={opt} value={opt} />))}</datalist>
+                </div>
+              </div>
+            </div>
+
+            {/* Tags (EDIT mode only) */}
+            {isEdit && (
+              <div className="mt-2">
+                <div className="mb-1 text-sm text-zinc-600 dark:text-zinc-300">Tags</div>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {(tags||[]).map(t => (
+                    <span key={t} className="group text-xs px-2 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center gap-1">
+                      #{t}
+                      <button className="opacity-60 group-hover:opacity-100 -mr-1 ml-1 rounded px-1 hover:bg-zinc-200 dark:hover:bg-zinc-700" title="Remove" onClick={()=> removeTagLocal(t)}>×</button>
+                    </span>
+                  ))}
+                  {(tags||[]).length === 0 && <span className="text-xs text-zinc-500">No tags</span>}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={newTag}
+                    onChange={e=>setNewTag(e.target.value)}
+                    onKeyDown={onTagKeyDown}
+                    placeholder="Add tag… (Enter)"
+                    className="flex-1 rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700 text-sm" />
+                  <button onClick={tryAddTag} className="px-2 py-1 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm">Add</button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Toolbox */}
+          <div className="lg:col-span-1">
+            <div className="rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3">
+              <div className="text-xs uppercase tracking-wide text-zinc-500 mb-2">Toolbox</div>
+
+              <div className="mb-3">
+                <div className="text-xs text-zinc-500 mb-1">Current Category</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{catEmoji || '‎'}</span>
+                  <span className="text-sm">{category || '—'}</span>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <div className="text-xs text-zinc-500 mb-1">Current Subcategory</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{subEmoji || '‎'}</span>
+                  <span className="text-sm">{subcategory || '—'}</span>
+                </div>
+              </div>
+
+              <div className="text-xs text-zinc-500">
+                Tip: click the emoji buttons to the left of the fields to change icons.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <button onClick={onClose} className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800">Cancel</button>
+          <button
+            onClick={handleSave}
+            disabled={saveDisabled}
+            className={`px-4 py-2 rounded-xl ${saveDisabled ? 'opacity-50 pointer-events-none' : ''} bg-zinc-900 text-white dark:bg-white dark:text-zinc-900`}
+          >
+            {isEdit ? 'Save Changes' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+    function Input({ label, value, onChange, placeholder, textarea }){
+      return (
+        <label className="block text-sm">
+          <div className="mb-1 text-zinc-600 dark:text-zinc-300">{label}</div>
+          {textarea ? (
+            <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={4} className="w-full rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700" />
+          ) : (
+            <input value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} className="w-full rounded-xl px-3 py-2 bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700" />
+          )}
+        </label>
+      );
+    }
+
+    // Simple datalist Picker not needed now (we inlined inputs)
+
+    // --- App -----------------------------------------------------------------
+    // --- Grouped Results for 'All' + #tag search ----------------------------
+    function GroupedResults({ groups, active, onSelect, onTogglePin, onToggleBookmark, onEdit, onRemove, highlightTags = [], isEditor, bookmarkSet }){
+      return (
+        <div className="space-y-6">
+          {groups.map(([cat, items]) => (
+            <section key={cat} className="rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 bg-zinc-100 dark:bg-zinc-800/40">
+                <div className="font-medium">{cat}</div>
+                <div className="text-xs text-zinc-500">{items.length}</div>
+              </div>
+              <div className="p-3 grid gap-3 grid-cols-1 md:grid-cols-2">
+                {items.map(l => (
+  <LinkCard
+    key={l.id}
+    link={{ ...l, __bookmarkedByMe: bookmarkSet?.has(l.id) }}
+    isEditor={isEditor}
+    active={active?.id === l.id}
+    onSelect={onSelect}
+    onTogglePin={onTogglePin}
+    onToggleBookmark={onToggleBookmark}
+    onEdit={onEdit}
+    onRemove={onRemove}
+    highlightTags={highlightTags}
+  />
+))}
+
+              </div>
+            </section>
+          ))}
+        </div>
+      );
+    }
+
+    // --- Settings Modal ------------------------------------------------------
+    function SettingsModal({ onClose, onExport, onImport, activity, onClearLog, categories, subcategoriesByCat, pairDescriptions, onSetPairDescription }){
+      const [tab, setTab] = React.useState('backup');
+      const [importMode, setImportMode] = React.useState('merge'); // 'merge' | 'replace'
+      const [importPreview, setImportPreview] = React.useState(null);
+      const fileRef = React.useRef(null);
+
+      // Descriptions tab local state
+      const [localCat, setLocalCat] = React.useState(categories[0]||'');
+      const [localSub, setLocalSub] = React.useState((subcategoriesByCat[categories[0]]||[])[0]||'');
+      const [localText, setLocalText] = React.useState('');
+
+      React.useEffect(()=>{
+        // Whenever selection changes, load text
+        const key = pairKey(localCat, localSub);
+        setLocalText((pairDescriptions && pairDescriptions[key]) || '');
+      }, [localCat, localSub, pairDescriptions]);
+
+
+      const onPickFile = async (e)=>{
+        const f = e.target.files && e.target.files[0];
+        if(!f) return;
+        try{
+          const text = await f.text();
+          const obj = JSON.parse(text);
+          const links = Array.isArray(obj.links) ? obj.links : [];
+          const info = {
+            version: obj.version || 1,
+            count: links.length,
+            categories: Object.keys(obj.categoryIcons || {}).length || 0,
+            subcategories: Object.keys(obj.subcategoryIcons || {}).length || 0
+          };
+          setImportPreview({ raw: obj, info, filename: f.name });
+        }catch(err){
+          alert('Invalid JSON: ' + err.message);
+          setImportPreview(null);
+        }
+      };
+
+      const doImport = ()=>{
+        if(!importPreview) return;
+        onImport(importPreview.raw, importMode);
+        setImportPreview(null);
+      };
+
+      const badge = (type)=>{
+        const map = {
+          ADD:'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+          EDIT:'bg-blue-500/20 text-blue-300 border-blue-500/40',
+          DELETE:'bg-red-500/20 text-red-300 border-red-500/40',
+          PIN:'bg-amber-500/20 text-amber-300 border-amber-500/40',
+          BOOKMARK:'bg-yellow-500/20 text-yellow-300 border-yellow-500/40',
+          TAG_ADD:'bg-teal-500/20 text-teal-300 border-teal-500/40',
+          TAG_REMOVE:'bg-rose-500/20 text-rose-300 border-rose-500/40',
+          IMPORT:'bg-purple-500/20 text-purple-300 border-purple-500/40',
+          EXPORT:'bg-indigo-500/20 text-indigo-300 border-indigo-500/40'
+        };
+        return map[type] || 'bg-zinc-500/20 text-zinc-300 border-zinc-500/40';
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-4xl h-[85vh] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
+              <div className="text-lg font-semibold">Settings</div>
+              <button onClick={onClose} className="text-xl">✕</button>
+            </div>
+
+            <div className="flex gap-2 p-3 border-b border-zinc-200 dark:border-zinc-800">
+              <button onClick={()=>setTab('backup')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='backup'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Backup</button>
+              <button onClick={()=>setTab('activity')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='activity'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Activity Log</button>
+              <button onClick={()=>setTab('descriptions')} className={`px-3 py-1.5 rounded-xl ${tab==='descriptions'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Descriptions</button>
+              <button disabled className="px-3 py-1.5 rounded-xl text-sm opacity-50 pointer-events-none">Preferences (soon)</button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4">
+              {tab==='backup' && (
+                <div className="space-y-6">
+                  <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4">
+                    <div className="font-medium mb-2">Export</div>
+                    <p className="text-sm text-zinc-500 mb-3">Download a JSON backup of your links, category icons, and subcategory icons.</p>
+                    <button onClick={onExport} className="px-3 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">Export JSON</button>
+                  </section>
+
+                  <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4">
+                    <div className="font-medium mb-2">Import</div>
+                    <p className="text-sm text-zinc-500 mb-3">Load a JSON backup. You can merge into the current list (default) or replace everything.</p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <input ref={fileRef} type="file" accept="application/json" onChange={onPickFile} className="text-sm" />
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="radio" name="importMode" checked={importMode==='merge'} onChange={()=>setImportMode('merge')} />
+                        Merge
+                      </label>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="radio" name="importMode" checked={importMode==='replace'} onChange={()=>setImportMode('replace')} />
+                        Replace
+                      </label>
+                    </div>
+                    {importPreview ? (
+                      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 p-3 bg-zinc-50 dark:bg-zinc-900/50 mb-3">
+                        <div className="text-sm mb-1">Preview: <span className="font-mono">{importPreview.filename}</span></div>
+                        <div className="text-xs text-zinc-500">Links: {importPreview.info.count} · Categories: {importPreview.info.categories} · Subcategories: {importPreview.info.subcategories} · Version: {importPreview.info.version}</div>
+                      </div>
+                    ) : null}
+                    <div className="flex gap-2">
+                      <button onClick={doImport} disabled={!importPreview} className={`px-3 py-2 rounded-xl ${importPreview ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'opacity-50 pointer-events-none bg-zinc-800 text-white'}`}>Import</button>
+                      <button onClick={()=>{ if(fileRef.current) fileRef.current.value=''; setImportPreview(null); }} className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800">Reset</button>
+                    </div>
+                  </section>
+                </div>
+              )}
+
+              
+              {tab==='descriptions' && (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
+                  <aside className="md:col-span-4 space-y-4">
+                    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3">
+                      <div className="font-medium mb-2">Category</div>
+                      <div className="max-h-[40vh] overflow-auto space-y-1">
+                        {categories.map(cat => (
+                          <button key={cat}
+                            onClick={()=>setLocalCat(cat)}
+                            className={`w-full text-left px-3 py-2 rounded-xl ${localCat===cat?'bg-zinc-100 dark:bg-zinc-800':''}`}>
+                            {cat}
+                          </button>
+                        ))}
+                        {categories.length===0 && <div className="text-sm text-zinc-500">No categories yet.</div>}
+                      </div>
+                    </section>
+                    <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3">
+                      <div className="font-medium mb-2">Subcategory</div>
+                      <div className="max-h-[40vh] overflow-auto space-y-1">
+                        {(subcategoriesByCat[localCat]||[]).map(sub => (
+                          <button key={sub}
+                            onClick={()=>setLocalSub(sub)}
+                            className={`w-full text-left px-3 py-2 rounded-xl ${localSub===sub?'bg-zinc-100 dark:bg-zinc-800':''}`}>
+                            {sub}
+                          </button>
+                        ))}
+                        {(!subcategoriesByCat[localCat] || subcategoriesByCat[localCat].length===0) && (
+                          <div className="text-sm text-zinc-500">No subcategories for this category.</div>
+                        )}
+                      </div>
+                    </section>
+                  </aside>
+
+                  <section className="md:col-span-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="font-medium">Description</div>
+                      <div className="text-xs text-zinc-500">{localCat && localSub ? `${localCat} — ${localSub}` : 'Pick a category & subcategory'}</div>
+                    </div>
+                    <textarea
+                      className="flex-1 min-h-[200px] rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 outline-none"
+                      placeholder="Write a helpful description for this Category → Subcategory…"
+                      value={localText}
+                      onChange={(e)=>setLocalText(e.target.value)}
+                      disabled={!localCat || !localSub}
+                    ></textarea>
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      <button onClick={()=>{ setLocalText(''); if(localCat&&localSub) onSetPairDescription(localCat, localSub, ''); }} className="px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800">Clear</button>
+                      <button
+                        onClick={()=>{ if(localCat&&localSub) onSetPairDescription(localCat, localSub, localText); }}
+                        disabled={!localCat || !localSub}
+                        className={`px-4 py-2 rounded-xl ${(!localCat||!localSub)?'opacity-60 pointer-events-none':''} bg-zinc-900 text-white dark:bg-white dark:text-zinc-900`}
+                      >Save</button>
+                    </div>
+                  </section>
+                </div>
+              )}
+
+              {tab==='activity' && (
+                <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-medium">Activity Log</div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={onClearLog} className="px-2 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-sm">Clear</button>
+                    </div>
+                  </div>
+                  <div className="max-h-[55vh] overflow-auto space-y-2">
+                    {(activity.filter(a => a.type !== 'PIN' && a.type !== 'BOOKMARK').length===0) && <div className="text-sm text-zinc-500">No activity yet.</div>}
+{activity.filter(a => a.type !== 'PIN' && a.type !== 'BOOKMARK').map((a)=> (
+                      <div key={a.id} className="flex items-start gap-3 rounded-xl border border-zinc-200 dark:border-zinc-800 p-2">
+                        <span className={`text-[11px] px-2 py-0.5 rounded-full border ${badge(a.type)}`}>{a.type}</span>
+                        <div className="flex-1 text-sm">
+                          <div className="opacity-80">{a.message}</div>
+                          <div className="text-xs text-zinc-500">{new Date(a.time).toLocaleString()}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // --- Search token parser (for highlighting) ---
+    function parseSearchTokens(q=''){
+      const tagTokens = [];
+      const tagRe = /#([^\s#]+)/g;
+      let m;
+      while ((m = tagRe.exec(q))) tagTokens.push(m[1].toLowerCase());
+      const text = q.replace(tagRe, ' ').trim();
+      const textTokens = text ? text.split(/\s+/).map(s=>s.toLowerCase()) : [];
+      return { tagTokens, textTokens };
+    }
+
+
+
+    function App(){const [query, setQuery] = useState('');
+      const { tagTokens: highlightTagTokens } = useMemo(()=>parseSearchTokens(query), [query]);
+      const [links, setLinks] = useState([]);
+	  const [user, setUser] = useState(null);
+	  const isEditor = !!(user && user.email && ALLOWED_EDITOR_EMAILS.has(user.email));
+      const [bookmarkSet, setBookmarkSet] = useState(new Set());
+      const [searchScope, setSearchScope] = useState('category');
+      const [showSettings, setShowSettings] = useState(false);
+      const [activity, setActivity] = useState([]);
+      const [active, setActive] = useState(null);
+      const [activeCat, setActiveCat] = useState();
+      const [activeSub, setActiveSub] = useState();
+      const [showAdd, setShowAdd] = useState(false);
+      const [showEdit, setShowEdit] = useState(false);
+      const [editingItem, setEditingItem] = useState(null);
+
+      // --- Auth (Google via Firebase) ---
+      useEffect(()=>{
+        try{
+          if (window.firebase && firebase.auth) {
+            firebase.auth().onAuthStateChanged(u => setUser(u));
+          }
+        }catch(e){ console.warn('Auth observer error', e); }
+      }, []);
+        useEffect(() => {
+      // Adjust ordering if you want
+         const unsub = db.collection('links')
+         .orderBy('title')
+         .onSnapshot(snap => {
+         const arr = [];
+         snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
+         setLinks(arr);
+    });
+  return () => unsub();
+}, []);
+useEffect(() => {
+  if (!user) { setBookmarkSet(new Set()); return; }
+  const unsub = db.collection('users').doc(user.uid).collection('bookmarks')
+    .onSnapshot(snap => {
+      const s = new Set();
+      snap.forEach(d => s.add(d.id));
+      setBookmarkSet(s);
+    });
+  return () => unsub();
+}, [user]);
+
+// === Meta (icons + pair descriptions) persistence ===
+const META_DOC_REF = db.collection('meta').doc('app');
+
+useEffect(() => {
+  const unsub = META_DOC_REF.onSnapshot(snap => {
+    const data = snap.exists ? snap.data() : {};
+    if (data.categoryIcons)
+      setCategoryIcons(prev => ({ ...prev, ...data.categoryIcons }));
+    if (data.subcategoryIcons)
+      setSubcategoryIcons(prev => ({ ...prev, ...data.subcategoryIcons }));
+    if (data.pairDescriptions)
+      setPairDescriptions(prev => ({ ...prev, ...data.pairDescriptions }));
+  }, (err) => console.warn('meta/app snapshot error:', err));
+  return () => unsub();
+}, []);
+
+const metaSaveTimer = React.useRef(null);
+const metaPatchRef  = React.useRef({});
+const scheduleMetaSave = (patch) => {
+  if (!isEditor) return; // only editors write
+  metaPatchRef.current = { ...metaPatchRef.current, ...patch };
+  clearTimeout(metaSaveTimer.current);
+  metaSaveTimer.current = setTimeout(async () => {
+    const toWrite = metaPatchRef.current;
+    metaPatchRef.current = {};
+    try { await META_DOC_REF.set(toWrite, { merge: true }); }
+    catch (e) { console.error('meta save failed', e); }
+  }, 400);
+};
+
+// Replace your existing setters with these bodies (no duplicates!)
+const setCatEmoji = (label, emoji) => setCategoryIcons(prev => {
+  const k = normKey(label || '');
+  if (RESERVED_CATEGORY_KEYS.has(k)) return prev;
+  if (RESERVED_EMOJIS.has(emoji))   return prev;
+  const next = { ...prev, [k]: emoji || DEFAULT_CATEGORY_ICON };
+  scheduleMetaSave({ categoryIcons: next });
+  return next;
+});
+
+const setSubEmoji = (label, emoji) => setSubcategoryIcons(prev => {
+  if (RESERVED_EMOJIS.has(emoji)) return prev; // no 📌/⭐ for subs
+  const k = normKey(label || '');
+  const next = { ...prev, [k]: emoji || DEFAULT_SUBCATEGORY_ICON };
+  scheduleMetaSave({ subcategoryIcons: next });
+  return next;
+});
+
+// If you expose a pair-description setter via props, update it like this:
+const onSetPairDescription = (cat, sub, text) => {
+  setPairDescriptions(prev => {
+    const key  = pairKey(cat, sub);
+    const next = { ...prev, [key]: (text || '') };
+    scheduleMetaSave({ pairDescriptions: next });
+    return next;
+  });
+};
+
+// ADD — Firestore
+const addLink = async (payload) => {
+  if (!isEditor) { alert('Editors only'); return; }
+  try {
+    const catSet = new Set(allCategories);
+    const subSet = new Set(allSubcategories);
+    const cats = (payload.categories?.length ? payload.categories : ['Bookmarks'])
+      .map(c => canonicalizeLabel(c, catSet));
+    const subs = (payload.subcategories?.length ? payload.subcategories : ['General'])
+      .map(s => canonicalizeLabel(s, subSet));
+
+    const docRef = await db.collection('links').add({
+      title: payload.title,
+      url: payload.url,
+      desc: payload.desc || '',
+      categories: cats,
+      subcategories: subs,
+      tags: [],
+      pinned: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: user?.uid || null,
+      createdByEmail: user?.email || null,
+    });
+    logAction('ADD', `Added: ${payload.title || payload.url}`, { id: docRef.id });
+    setShowAdd(false);
+  } catch (err) {
+    console.error(err);
+    alert('Add failed: ' + (err?.message || err));
+  }
+};
+
+// EDIT — Firestore
+const updateLink = async (id, payload) => {
+  if (!isEditor) return;
+  try {
+    const catSet = new Set(allCategories);
+    const subSet = new Set(allSubcategories);
+    const cats = (payload.categories?.length ? payload.categories : ['Bookmarks'])
+      .map(c => canonicalizeLabel(c, catSet));
+    const subs = (payload.subcategories?.length ? payload.subcategories : ['General'])
+      .map(s => canonicalizeLabel(s, subSet));
+
+    await db.collection('links').doc(id).update({
+      title: payload.title,
+      url: payload.url,
+      desc: payload.desc || '',
+      categories: cats,
+      subcategories: subs,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    logAction('EDIT', `Edited: ${payload.title || id}`);
+    setShowEdit(false);
+    setEditingItem(null);
+  } catch (err) {
+    console.error(err);
+    alert('Edit failed: ' + (err?.message || err));
+  }
+};
+
+// DELETE — Firestore
+const removeLink = async (id) => {
+  if (!isEditor) return;
+  try {
+    if (!confirm('Delete this link?')) return;
+    await db.collection('links').doc(id).delete();
+    if (active?.id === id) setActive(null);
+    logAction('DELETE', `Deleted: ${id}`);
+  } catch (err) {
+    console.error(err);
+    alert('Delete failed: ' + (err?.message || err));
+  }
+};
+
+// TAGS — Firestore
+const addTagToLink = async (id, tag) => {
+  const t = (tag || '').trim();
+  if (!t) return;
+  try {
+    await db.collection('links').doc(id).update({
+      tags: firebase.firestore.FieldValue.arrayUnion(t)
+    });
+    logAction('TAG_ADD', `#${t} → ${id}`);
+  } catch (err) {
+    console.error(err);
+    alert('Tag add failed: ' + (err?.message || err));
+  }
+};
+
+const removeTagFromLink = async (id, tag) => {
+  try {
+    await db.collection('links').doc(id).update({
+      tags: firebase.firestore.FieldValue.arrayRemove(tag)
+    });
+    logAction('TAG_REMOVE', `#${tag} × ${id}`);
+  } catch (err) {
+    console.error(err);
+    alert('Tag remove failed: ' + (err?.message || err));
+  }
+};
+
+// Actions: pin (editors only)
+async function onTogglePin(linkId, currentPinned){
+  if (!isEditor) return; // UI guard
+  await db.collection('links').doc(linkId).update({ pinned: !currentPinned });
+}
+// Actions: bookmark (any logged-in user)
+async function onToggleBookmark(linkId){
+  if (!user) { await signInWithGoogle(); return; }
+  const ref = db.collection('users').doc(user.uid).collection('bookmarks').doc(linkId);
+  if (bookmarkSet.has(linkId)) {
+    await ref.delete();
+  } else {
+    await ref.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  }
+}
+      const signInWithGoogle = async ()=>{
+        try{
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await firebase.auth().signInWithPopup(provider);
+        }catch(err){
+          console.error(err);
+          alert('Google sign-in failed: ' + (err && err.message ? err.message : err));
+        }
+      };
+      const signOut = async ()=>{
+        try{ await firebase.auth().signOut(); }catch(err){ console.error(err); }
+      };
+    
+      
+            const [pairDescriptions, setPairDescriptions] = useState({});
+// Show Welcome card when no category/subcategory is selected and search is empty
+      const showWelcome = useMemo(() => !activeCat && !activeSub && !(query||'').trim(), [activeCat, activeSub, query]);
+
+
+      const [categoryIcons, setCategoryIcons] = useState({ ...START_CATEGORY_ICONS });
+      const [subcategoryIcons, setSubcategoryIcons] = useState({ ...START_SUBCATEGORY_ICONS });
+
+      const previewCache = useRef(new Map());
+      const getPreview = async (url)=>{ const key=normKey(url); if(previewCache.current.has(key)) return previewCache.current.get(key); const p=await fetchPreview(url); previewCache.current.set(key,p); return p; };
+
+      // useEffect(()=>{ if(!active && links.length) setActive(links[0]); },[links]);
+
+      // Boot checks: mark data ready and UI mounted
+      useEffect(()=>{ window.__boot && window.__boot('data'); },[]);
+      useEffect(()=>{ window.__boot && window.__boot('ui'); window.__hideBoot && window.__hideBoot(); },[]);
+
+
+      
+      const filtered = useMemo(()=>{
+        // If searching 'All', ignore active category/sub filters
+        let arr;
+        const q = (query || '').trim();
+        if (q && searchScope === 'all') {
+          arr = [...links];
+        } else {
+          arr = [...links];
+          if(activeCat){
+            const catKey = normKey(activeCat);
+            if(catKey==='pinned') arr = arr.filter(l=>l.pinned);
+            else if (catKey === 'bookmarks') arr = arr.filter(l => bookmarkSet.has(l.id));
+            else arr = arr.filter(l=> l.categories.some(c=>normKey(c)===catKey));
+          }
+          if(activeSub) arr = arr.filter(l=> (l.subcategories||['General']).some(s=>normKey(s)===normKey(activeSub)));
+        }
+
+        if(q){
+          // Parse #tag tokens and free-text tokens
+          const tagTokens = [];
+          const tagRe = /#([^\s#]+)/g;
+          let m;
+          while((m = tagRe.exec(q))){ tagTokens.push(m[1].toLowerCase()); }
+          const text = q.replace(tagRe, ' ').trim();
+          const textTokens = text ? text.split(/\s+/).map(s=>s.toLowerCase()) : [];
+
+          const hasAllTags = (l)=>{
+            const tags = (l.tags || []).map(t=>t.toLowerCase());
+            return tagTokens.every(t => tags.includes(t));
+          };
+          const matchesText = (l)=>{
+            if(textTokens.length === 0) return true;
+            const hay = (l.title + ' ' + l.url + ' ' + (l.desc||'') + ' ' + (l.tags||[]).join(' ')).toLowerCase();
+            return textTokens.every(t => hay.includes(t));
+          };
+
+          arr = arr.filter(l => hasAllTags(l) && matchesText(l));
+        }
+
+        arr.sort((a,b)=> (b.pinned - a.pinned) || a.title.localeCompare(b.title));
+        return arr;
+      },[links, query, activeCat, activeSub, searchScope, bookmarkSet]);
+      
+      const inAllTagSearch = useMemo(()=>{
+        if (searchScope !== 'all') return false;
+        return /#\S/.test((query||''));
+      },[searchScope, query]);
+
+      const inAllTextSearch = useMemo(()=>{
+        if (searchScope !== 'all') return false;
+        const q = (query||'').trim();
+        if (!q) return false;
+        return !/#\S/.test(q); // true for normal text-only search
+      },[searchScope, query]);
+
+
+      const groupedByCat = useMemo(()=>{
+        if (!(inAllTagSearch || inAllTextSearch)) return [];
+        const map = new Map();
+        for (const l of filtered) {
+          const cat = (l.categories && l.categories[0]) || 'Uncategorized';
+          const key = cat;
+          if (!map.has(key)) map.set(key, []);
+          map.get(key).push(l);
+        }
+        return Array.from(map.entries()).sort((a,b)=> a[0].localeCompare(b[0]));
+      },[filtered, inAllTagSearch, inAllTextSearch]);
+
+      // Activity logging
+      const logAction = (type, message, extra={})=>{
+        setActivity(prev => [{ id: String(Date.now()) + Math.random().toString(36).slice(2), type, message, time: Date.now(), ...extra }, ...prev].slice(0,500));
+      };
+
+      // Export current data
+      const exportData = ()=>{
+        try{
+          const payload = {
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            links,
+            categoryIcons,
+            subcategoryIcons,
+            pairDescriptions
+          };
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `link-library-backup-${Date.now()}.json`; 
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          logAction('EXPORT', `Exported ${links.length} links`);
+        }catch(e){ alert('Export failed: ' + e.message); }
+      };
+
+      // Import handler
+      const importData = (obj, mode='merge')=>{
+        try{
+          const incoming = Array.isArray(obj.links) ? obj.links : [];
+          const incCatIcons = obj.categoryIcons || {};
+          const incSubIcons = obj.subcategoryIcons || {};
+
+          setCategoryIcons(prev => ({ ...prev, ...incCatIcons }));
+          setSubcategoryIcons(prev => ({ ...prev, ...incSubIcons }));
+
+          if(mode==='replace'){
+            setLinks(incoming);
+            logAction('IMPORT', `Replaced with ${incoming.length} links`);
+            return;
+          }
+          // merge by id or url
+          setLinks(prev => {
+            const byId = new Map(prev.map(l => [l.id, l]));
+            const byUrl = new Map(prev.map(l => [l.url, l]));
+            const out = [...prev];
+            for(const l of incoming){
+              if(l.id && byId.has(l.id)){
+                const idx = out.findIndex(x => x.id===l.id);
+                if(idx>=0) out[idx] = { ...byId.get(l.id), ...l };
+              } else if (l.url && byUrl.has(l.url)){
+                const idx = out.findIndex(x => x.url===l.url);
+                if(idx>=0) out[idx] = { ...byUrl.get(l.url), ...l };
+              } else {
+                out.push(l);
+              }
+            }
+            return out;
+          });
+          logAction('IMPORT', `Merged ${incoming.length} links`);
+        }catch(e){ alert('Import failed: ' + e.message); }
+      };
+
+      const clearActivity = ()=> setActivity([]);
+const headerTitle = useMemo(()=>{
+        const base = activeCat ? `${activeCat}` : (query.trim()? 'Search Results' : 'All Links');
+        const withSub = activeSub ? `${base} — ${activeSub}` : base;
+        return `${withSub} (${filtered.length})`;
+      },[activeCat, activeSub, filtered.length, query]);
+
+      const onSearchGo = ()=>{ const q=query.trim(); if(!q) return window.open('https://duckduckgo.com','_blank'); window.open(`https://duckduckgo.com/?q=${encodeURIComponent(q)}`,'_blank'); };
+      const toggleField = (id, field)=> {
+        setLinks(ls=> ls.map(l=> l.id===id ? { ...l, [field]: !l[field] } : l));
+        const item = links.find(l=>l.id===id);
+        const label = field==='pinned' ? 'PIN' : (field==='bookmarked'?'BOOKMARK':'TOGGLE');
+        logAction(label, `${item ? (item.title || item.url) : id} → ${field}`);
+      };
+
+      const canonicalizeLabel = (label, existingSet)=>{ const key=normKey(label); for(const ex of existingSet){ if(normKey(ex)===key) return ex; } return titleCase(label); };
+      const allCategories = useMemo(()=>{ const set=new Set(); for(const l of links) for(const c of l.categories||[]) set.add(titleCase(c)); set.add('Pinned'); set.add('Bookmarks'); return [...set].sort((a,b)=>a.localeCompare(b)); },[links]);
+      
+      const subcategoriesByCat = useMemo(()=>{
+        const map = new Map();
+        (links||[]).forEach(l=>{
+          const cats = l.categories||[];
+          const subs = l.subcategories||[];
+          cats.forEach(c=>{
+            if(!map.has(c)) map.set(c, new Set());
+            subs.forEach(s=>{ const ss=(s||'').trim(); if(ss) map.get(c).add(ss); });
+          });
+        });
+        const out = {};
+        for (const [k, set] of map.entries()) out[k] = Array.from(set).sort((a,b)=>a.localeCompare(b));
+        return out;
+      },[links]);
+const allSubcategories = useMemo(()=>{ const set=new Set(); for(const l of links) for(const s of l.subcategories||[]) set.add(titleCase(s)); set.add('General'); return [...set].sort((a,b)=>a.localeCompare(b)); },[links]);
+
+      const allTags = useMemo(()=>{
+        const set = new Set();
+        for (const l of links) for (const t of (l.tags || [])) { const s=(t||'').trim(); if(s) set.add(s); }
+        return [...set].sort((a,b)=> a.localeCompare(b));
+      },[links]);
+
+      const startEdit = (link)=>{ setEditingItem(link); setShowEdit(true); };
+    
+ 
+
+      return (
+        <div className="h-screen w-screen overflow-hidden bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100"><TopBar query={query} setQuery={setQuery} onSearchGo={onSearchGo}  onAddLink={()=>setShowAdd(true)} searchScope={searchScope} setSearchScope={setSearchScope} totalCount={links.length} tagOptions={allTags} onOpenSettings={()=>setShowSettings(true)} user={user} onLogin={signInWithGoogle} onLogout={signOut} isEditor={isEditor} />
+          <div className="h-[calc(100vh-56px)] grid" style={{ gridTemplateColumns: '16rem 1fr 20rem' }}>
+            <Sidebar allLinks={links} activeCat={activeCat} setActiveCat={setActiveCat} activeSub={activeSub} setActiveSub={setActiveSub} categoryIcons={categoryIcons} subcategoryIcons={subcategoryIcons} bookmarkSet={bookmarkSet} />
+            <main className="p-4 overflow-auto space-y-3">
+              { showWelcome && (
+                <section className="w-full max-w-3xl mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/40 backdrop-blur p-6 shadow-2xl mt-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <div className="text-2xl md:text-3xl font-bold tracking-tight">Welcome back <span className="align-[-2px]">👋</span></div>
+                      <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">Ready to add a link or open settings?</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+					{isEditor && (
+                      <button onClick={()=>setShowAdd(true)} className="px-4 py-2 rounded-xl bg-blue-600 text-white dark:bg-blue-500 hover:opacity-90">Add link</button>
+					  )}
+					  {isEditor && (
+                      <button onClick={()=>setShowSettings(true)} className="px-4 py-2 rounded-xl border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800">Settings</button>
+					  )}
+                    </div>
+                  </div>
+                </section>
+              )}
+              <div data-role="hub-body" style={ showWelcome ? { display:'none' } : undefined }>
+
+              
+              <div className="text-lg font-semibold mb-2">{headerTitle}</div>
+              { activeCat && activeSub && (pairDescriptions[pairKey(activeCat, activeSub)]||'').trim() && (
+                <div
+                   className="text-[15px] md:text-base leading-relaxed text-zinc-600 dark:text-zinc-300 mb-3 whitespace-pre-wrap break-words" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
+                  {pairDescriptions[pairKey(activeCat, activeSub)]}
+                </div>
+              )}
+               <div className="my-3 flex items-center gap-3">
+               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-800 to-transparent"></div>
+               <div className="text-xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">Links</div>
+               <div className="h-px flex-1 bg-gradient-to-r from-transparent via-zinc-200 dark:via-zinc-800 to-transparent"></div>
+                 </div>
+
+              { (inAllTagSearch || inAllTextSearch) ? (
+                <div>
+                  <div className="text-sm text-zinc-500 mb-2">
+                    Showing <span className="font-medium">{filtered.length}</span> {filtered.length===1?'link':'links'} across categories
+                  </div>
+                  <GroupedResults
+  groups={someGroups}
+  active={active}
+  onSelect={setActive}
+  onTogglePin={onTogglePin}
+  onToggleBookmark={onToggleBookmark}
+  onEdit={startEdit}
+  onRemove={removeLink}
+  highlightTags={highlightTagTokens}
+  isEditor={isEditor}
+  bookmarkSet={bookmarkSet}
+/>
+                </div>
+              ) : (
+                <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
+                  {filtered.map(l=> (
+                    <LinkCard
+                    key={l.id}
+                    link={{ ...l, __bookmarkedByMe: bookmarkSet.has(l.id) }}
+                    isEditor={isEditor}
+                    active={active?.id === l.id}
+                    onSelect={setActive}
+                    onTogglePin={onTogglePin}
+                    onToggleBookmark={onToggleBookmark}
+                    onEdit={startEdit}
+                    onRemove={removeLink}
+                    highlightTags={highlightTagTokens}
+                        />
+                  ))}
+                </div>
+              )}
+
+              </div>
+</main>
+            <DetailsPanel
+                 link={active}
+                 getPreview={getPreview}
+                 onAddTag={addTagToLink}
+                 onRemoveTag={removeTagFromLink} />
+
+          </div>
+          {showAdd && (
+            <AddEditLinkModal mode="add"
+              onClose={()=>setShowAdd(false)}
+              onSubmit={addLink}
+              categories={allCategories}
+              subcategories={allSubcategories}
+              categoryIcons={categoryIcons}
+              subcategoryIcons={subcategoryIcons}
+              onPickCatEmoji={setCatEmoji}
+              onPickSubEmoji={setSubEmoji} />
+          )}
+          {showEdit && (
+            <AddEditLinkModal mode="edit" initial={editingItem || {}}
+              onClose={()=>{ setShowEdit(false); setEditingItem(null); }}
+              onSubmit={payload=> updateLink(editingItem.id, payload)}
+              categories={allCategories}
+              subcategories={allSubcategories}
+              categoryIcons={categoryIcons}
+              subcategoryIcons={subcategoryIcons}
+              onPickCatEmoji={setCatEmoji}
+              onPickSubEmoji={setSubEmoji} />
+          )}
+          {showSettings && (
+            <SettingsModal
+              onClose={()=>setShowSettings(false)}
+              onExport={exportData}
+              onImport={importData}
+              activity={activity}
+              onClearLog={clearActivity}
+              categories={allCategories}
+              subcategoriesByCat={subcategoriesByCat}
+              pairDescriptions={pairDescriptions}
+              onSetPairDescription={onSetPairDescription}
+            />
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
