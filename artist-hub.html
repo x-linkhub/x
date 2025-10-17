@@ -108,6 +108,9 @@
   
 /* Safer default: hide editing UI unless editor class is present */
 #addBtn, #menuBtn, .actions { display: none !important; }
+/* keep auth buttons always visible */
+#loginBtn, #logoutBtn { display: inline-flex !important; }
+
 body.editor #addBtn, body.editor #menuBtn { display: inline-flex !important; }
 body.editor .actions { display: flex !important; }
 
@@ -125,6 +128,10 @@ body.editor .actions { display: flex !important; }
       </div>
       <div class="spacer"></div>
       <div class="right">
+        <span id="userBadge" class="muted"></span>
+        <button id="loginBtn" class="btn ghost" title="Sign in">Sign in</button>
+        <button id="logoutBtn" class="btn ghost hidden" title="Sign out">Sign out</button>
+
         <button id="addBtn" class="btn primary" title="Add artist">＋ Add Artist</button>
         <button id="menuBtn" class="btn" title="Menu">☰ Menu</button>
       </div>
@@ -238,6 +245,35 @@ body.editor .actions { display: flex !important; }
   const db = getFirestore();
   // Expose for console debugging
   window.auth = auth; window.db = db;
+  // --- Auth UI controls ---
+  const loginBtn  = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userBadge = document.getElementById("userBadge");
+
+  function updateAuthUI(u) {
+    if (u) {
+      if (userBadge) userBadge.textContent = u.email || u.uid;
+      if (loginBtn) loginBtn.classList.add("hidden");
+      if (logoutBtn) logoutBtn.classList.remove("hidden");
+    } else {
+      if (userBadge) userBadge.textContent = "";
+      if (loginBtn) loginBtn.classList.remove("hidden");
+      if (logoutBtn) logoutBtn.classList.add("hidden");
+    }
+  }
+
+  loginBtn && loginBtn.addEventListener("click", async () => {
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (e) {
+      console.error(e);
+      alert("Sign-in failed: " + (e && e.message ? e.message : e));
+    }
+  });
+  logoutBtn && logoutBtn.addEventListener("click", async () => {
+    try { await signOut(auth); } catch (e) { console.error(e); }
+  });
+
 
   // --- Collection/doc refs ---
   const DATA_DOC = doc(db, "artistHub", "data");
@@ -252,7 +288,10 @@ body.editor .actions { display: flex !important; }
     document.querySelectorAll("[data-editor-only]").forEach(el => el.hidden = !on);
   }
   applyEditor(auth.currentUser);
-  onAuthStateChanged(auth, applyEditor);
+  onAuthStateChanged(auth, (u) => {
+    applyEditor(u);
+    updateAuthUI(u);
+  });
 
   // --- State ---
   const STORAGE_KEY = "artistHub.v1";
@@ -391,7 +430,8 @@ body.editor .actions { display: flex !important; }
     if (!a) return;
     els.dialogTitle && (els.dialogTitle.textContent = "Edit Artist");
     els.name && (els.name.value = a.name || "");
-    if (els.videos) els.videos.value = (a.videos || []).map(v => `https://youtu.be/${v}`).join("");
+    if (els.videos) els.videos.value = (a.videos || []).map(v => `https://youtu.be/${v}`).join("
+");
     els.editingId && (els.editingId.value = id);
     resetLinksEditor();
     if ((a.links || []).length) a.links.forEach(l => addLinkInput(l.url)); else addLinkInput();
