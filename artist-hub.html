@@ -150,7 +150,7 @@
       </div>
       <div class="spacer"></div>
       <div class="right">
-        <span id="syncStatus" class="muted" title="Sync status">Read‑only</span>
+        <span id="syncStatus" class="muted" title="Sync status">Read-only</span>
 
         <!-- Auth UI (always visible) -->
         <div class="auth" id="authArea">
@@ -256,8 +256,13 @@
   </template>
 
   <script type="module">
+    window.addEventListener('error', (e)=>console.error('Global error:', e.message||e));
+    window.addEventListener('unhandledrejection', (e)=>console.error('Unhandled promise:', e.reason||e));
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence,
+             browserLocalPersistence, browserSessionPersistence,
+             GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import { getFirestore, collection, doc, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch, enableIndexedDbPersistence, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
     // --- Firebase config ---
@@ -272,7 +277,21 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    await setPersistence(auth, browserLocalPersistence);
+
+    // Robust persistence setup
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      console.log('[auth] persistence: local');
+    } catch (e) {
+      console.warn('[auth] local persistence failed, falling back to session:', e?.code || e);
+      try {
+        await setPersistence(auth, browserSessionPersistence);
+        console.log('[auth] persistence: session');
+      } catch (e2) {
+        console.warn('[auth] session persistence failed:', e2?.code || e2);
+      }
+    }
+
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
 
@@ -283,7 +302,7 @@
     const COL = 'artists';
     const qArtists = query(collection(db, COL), orderBy('order', 'asc'), orderBy('createdAt', 'asc'));
 
-    // Whitelisted emails that can edit (UI gate) — rules also enforce this server-side
+    // Whitelisted emails that can edit (UI gate) — protect with Firestore rules too
     const ALLOWED_EMAILS = ["xq.dannybs@gmail.com", "dafuke88@gmail.com"];
 
     // --- Auth UI elements ---
@@ -332,22 +351,32 @@
     function setEditorGate(u){
       const ok = !!u && ALLOWED_EMAILS.includes(u.email || "");
       document.body.classList.toggle("editor", ok);
-      syncStatus.textContent = ok ? "Editing (synced)" : "Read‑only";
+      syncStatus.textContent = ok ? "Editing (synced)" : "Read-only";
     }
 
     onAuthStateChanged(auth, (u) => {
+      console.log('[auth] state changed:', !!u, u?.email);
       updateAuthUI(u);
       setEditorGate(u);
     });
 
     loginBtn?.addEventListener("click", async () => {
+      console.log('[auth] login click');
       try{
         await signInWithPopup(auth, provider);
+        console.log('[auth] popup opened');
       }catch(e){
-        if(e?.code === "auth/popup-blocked"){
+        console.warn('[auth] popup error:', e?.code, e?.message);
+        // Common cases: popup-blocked, popup-closed-by-user, third-party cookies
+        if (e?.code === "auth/popup-blocked" ||
+            e?.code === "auth/popup-closed-by-user" ||
+            e?.code === "auth/cancelled-popup-request" ||
+            e?.code === "auth/operation-not-supported-in-this-environment") {
+          console.log('[auth] using redirect fallback…');
           await signInWithRedirect(auth, provider);
+        } else if (e?.code === "auth/unauthorized-domain") {
+          alert('Firebase Auth: unauthorized domain.\nAdd "x-linkhub.github.io" in Firebase Console → Authentication → Settings → Authorized domains.');
         } else {
-          console.error(e);
           alert("Sign-in failed: " + (e.message || e));
         }
       }
@@ -599,7 +628,6 @@
             batch.update(doc(db, COL, cur.id), { order: (above.order||0) - 1, updatedAt: serverTimestamp() });
             batch.update(doc(db, COL, above.id), { updatedAt: serverTimestamp() });
             await batch.commit();
-            // Optional: re-normalize orders occasionally
             maybeNormalizeOrder();
           }
         }else if(action === 'move-down'){
@@ -618,7 +646,7 @@
       }
     });
 
-    // Normalize order values to tidy integers (optional)
+    // Normalize order values (optional)
     let normalizeTimer = null;
     function maybeNormalizeOrder(){
       clearTimeout(normalizeTimer);
@@ -641,7 +669,7 @@
     els.menuBtn.addEventListener('click', () => els.menuDialog.showModal());
     els.closeMenu.addEventListener('click', () => els.menuDialog.close());
 
-    // Export: dump the current in-memory list (no Firestore metadata)
+    // Export
     els.exportBtn.addEventListener('click', () => {
       const payload = state.artists.map(a => ({
         name: a.name, links: a.links, videos: a.videos, order: a.order
@@ -651,14 +679,13 @@
       const a = document.createElement('a'); a.href = url; a.download = 'artist-hub-export.json'; a.click(); setTimeout(()=> URL.revokeObjectURL(url), 2000);
     });
 
-    // Import: batch add/replace in Firestore
+    // Import: batch add
     els.importFile.addEventListener('change', (e) => {
       const file = e.target.files?.[0]; if(!file) return;
       const reader = new FileReader(); reader.onload = async () => {
         try{
           const data = JSON.parse(reader.result);
           if(Array.isArray(data)){
-            // Add to end with normalized order
             const base = state.artists.length ? Math.max(...state.artists.map(a => a.order||0)) + 1000 : 1000;
             let n = 0;
             const batch = writeBatch(db);
@@ -678,10 +705,6 @@
       };
       reader.readAsText(file);
     });
-
-    // ---------- Search ----------
-    els.search.addEventListener('input', () => { state.filter = els.search.value; render(); });
-    els.search.addEventListener('search', () => { state.filter = els.search.value; render(); });
 
     // ---------- Helpers ----------
     function detectPlatform(url){
