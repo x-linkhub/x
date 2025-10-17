@@ -232,13 +232,32 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-await setPersistence(auth, browserLocalPersistence);
+\1
+  // Wait for the first auth state before rendering UI (no refresh needed)
+  await new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      __user = u || null;
+      __isEditor = !!u && __ALLOWED.has((u.email || "").toLowerCase());
+      __applyEditorUI();
+      unsub();
+      resolve();
+    });
+  });
+// Apply editor UI immediately if a session is already present
+  if (auth.currentUser) {
+    const u = auth.currentUser;
+    __user = u;
+    __isEditor = __ALLOWED.has((u.email || "").toLowerCase());
+    __applyEditorUI();
+  }
 const db = getFirestore(app);
 const DATA_DOC = doc(db, "artistHub", "data");
 
 // Change these to your real editor emails:
 const ALLOWED_EMAILS = ["xq.dannybs@gmail.com", "dafuke88@gmail.com"];
 
+
+const __ALLOWED = new Set(ALLOWED_EMAILS.map(e => (e||"").toLowerCase()));
 let __user = null;
 let __isEditor = false;
 
@@ -248,7 +267,7 @@ function __applyEditorUI(){
 
 onAuthStateChanged(auth, (u) => {
   __user = u || null;
-  __isEditor = !!u && ALLOWED_EMAILS.includes(u.email || "");
+  __isEditor = !!u && __ALLOWED.has((u.email || "").toLowerCase());
   __applyEditorUI();
 
 
@@ -310,7 +329,7 @@ function load(){
       }catch(e){ console.warn('Load failed', e); state.artists = demo(); save(); }
     }
     async function save(){
-  if (!__isEditor) { alert('Editors only'); return; }
+  if (!__isEditor) { return; }
   try {
     await setDoc(DATA_DOC, { artists: state.artists }, { merge: true });
     // optional: keep local cache for offline
