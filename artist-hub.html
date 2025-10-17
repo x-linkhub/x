@@ -212,374 +212,398 @@ body.editor .actions { display: flex !important; }
     </div>
   </template>
 
-  <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+  
+<script type="module">
+  import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+  import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-// ===== Firebase (added) =====
+  // --- Firebase config (from your file) ---
+  const firebaseConfig = {
 
-
-
-const firebaseConfig = {
   apiKey: "AIzaSyBvWLRZjEyldAYZXfK6KV2H9_P5fLOsGMw",
   authDomain: "link-library-1dfc8.firebaseapp.com",
   projectId: "link-library-1dfc8",
   storageBucket: "link-library-1dfc8.firebasestorage.app",
   messagingSenderId: "368329977627",
   appId: "1:368329977627:web:625d20247d6aea3b9cadbe"
-};
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-await setPersistence(auth, browserLocalPersistence);
-const db = getFirestore(app);
-const DATA_DOC = doc(db, "artistHub", "data");
+  };
 
-// Change these to your real editor emails:
-const ALLOWED_EMAILS = ["xq.dannybs@gmail.com", "dafuke88@gmail.com"];
+  // --- Initialize Firebase (guarded) ---
+  if (!getApps().length) initializeApp(firebaseConfig);
+  const auth = getAuth();
+  await setPersistence(auth, browserLocalPersistence);
+  const db = getFirestore();
+  const DATA_DOC = doc(db, "artistHub", "data");
 
-let __user = null;
-let __isEditor = false;
+  // --- Editor emails ---
+  const ALLOWED_EMAILS = ["xq.dannybs@gmail.com", "dafuke88@gmail.com"];
+  const __ALLOWED = new Set(ALLOWED_EMAILS.map(e => (e || "").toLowerCase()));
 
-function __applyEditorUI(){
-  document.body.classList.toggle("editor", __isEditor);
-}
+  let __user = auth.currentUser || null;
+  let __isEditor = !!__user && __ALLOWED.has((__user?.email || "").toLowerCase());
 
-onAuthStateChanged(auth, (u) => {
-  __user = u || null;
-  __isEditor = !!u && ALLOWED_EMAILS.includes(u.email || "");
+  function __applyEditorUI() { document.body.classList.toggle("editor", __isEditor); }
   __applyEditorUI();
 
-// Live Firestore sync; will update global state + re-render when available
-onSnapshot(DATA_DOC, (snap) => {
-  if (window.__state) {
-    if (snap.exists()) {
-      const data = snap.data() || {};
-      window.__state.artists = Array.isArray(data.artists) ? data.artists : [];
-    } else {
-      window.__state.artists = [];
-    }
-    if (typeof window.__render === "function") window.__render();
+  onAuthStateChanged(auth, (u) => {
+    __user = u || null;
+    __isEditor = !!u && __ALLOWED.has((u.email || "").toLowerCase());
+    __applyEditorUI();
+  });
+
+  // --- DOM refs ---
+  const els = {
+    list: document.getElementById('list'),
+    addBtn: document.getElementById('addBtn'),
+    menuBtn: document.getElementById('menuBtn'),
+    menuDialog: document.getElementById('menuDialog'),
+    closeMenu: document.getElementById('closeMenu'),
+    exportBtn: document.getElementById('exportBtn'),
+    importFile: document.getElementById('importFile'),
+    search: document.getElementById('searchInput'),
+    dialog: document.getElementById('artistDialog'),
+    form: document.getElementById('artistForm'),
+    dialogTitle: document.getElementById('dialogTitle'),
+    cancelDialog: document.getElementById('cancelDialog'),
+    name: document.getElementById('artistName'),
+    linksEditor: document.getElementById('linksEditor'),
+    addLinkRow: document.getElementById('addLinkRow'),
+    videos: document.getElementById('videos'),
+    editingId: document.getElementById('editingId'),
+  };
+
+  // --- State & persistence ---
+  const STORAGE_KEY = 'artistHub.v1';
+  const state = { artists: [], filter: '' };
+  window.__state = state;
+
+  function saveLocal() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.artists)); } catch {} }
+  function loadLocal() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) state.artists = JSON.parse(raw);
+    } catch {}
   }
 
-// ===== End Firebase (added) =====
+  async function saveCloud() {
+    if (!__isEditor) return; // silent for non-editors / boot
+    try { await setDoc(DATA_DOC, { artists: state.artists }, { merge: true }); }
+    catch (e) { console.error('Save failed:', e); }
+  }
 
+  function save() { saveLocal(); saveCloud(); }
 
+  // --- Rendering ---
+  function render(){
+    const term = state.filter.trim().toLowerCase();
+    const items = !term ? state.artists : state.artists.filter(a =>
+      a.name.toLowerCase().includes(term) ||
+      (a.links||[]).some(l => (l.platform||'').toLowerCase().includes(term))
+    );
 
-  (function(){
-    const els = {
-      list: document.getElementById('list'),
-      addBtn: document.getElementById('addBtn'),
-      menuBtn: document.getElementById('menuBtn'),
-      menuDialog: document.getElementById('menuDialog'),
-      closeMenu: document.getElementById('closeMenu'),
-      exportBtn: document.getElementById('exportBtn'),
-      importFile: document.getElementById('importFile'),
-      search: document.getElementById('searchInput'),
-      dialog: document.getElementById('artistDialog'),
-      form: document.getElementById('artistForm'),
-      dialogTitle: document.getElementById('dialogTitle'),
-      cancelDialog: document.getElementById('cancelDialog'),
-      name: document.getElementById('artistName'),
-      linksEditor: document.getElementById('linksEditor'),
-      addLinkRow: document.getElementById('addLinkRow'),
-      videos: document.getElementById('videos'),
-      editingId: document.getElementById('editingId'),
+    els.list.innerHTML = '';
+    if (items.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'card muted';
+      empty.style.textAlign = 'center';
+      empty.style.padding = '30px';
+      empty.textContent = 'No artists yet. Click “Add Artist” to create your first one!';
+      els.list.appendChild(empty);
+      return;
+    }
+
+    for (const a of items) els.list.appendChild(artistCard(a));
+  }
+  window.__render = render;
+
+  function artistCard(a){
+    const card = document.createElement('article');
+    card.className = 'card'; card.dataset.id = a.id;
+
+    const head = document.createElement('div'); head.className = 'header';
+    const title = document.createElement('h3'); title.textContent = a.name;
+    head.appendChild(title);
+
+    const actions = document.createElement('div'); actions.className = 'actions';
+    actions.appendChild(iconButton('↑','Move up','move-up'));
+    actions.appendChild(iconButton('↓','Move down','move-down'));
+    actions.appendChild(iconButton('✎','Edit','edit'));
+    actions.appendChild(iconButton('🗑','Delete','delete'));
+    head.appendChild(actions);
+    card.appendChild(head);
+
+    if ((a.links||[]).length) {
+      const links = document.createElement('div'); links.className = 'links';
+      a.links.forEach(link => {
+        const chip = document.createElement('a');
+        chip.className = 'link-chip'; chip.href = link.url; chip.target = '_blank'; chip.rel = 'noopener noreferrer';
+        chip.title = link.url;
+        chip.innerHTML = iconSVG(link.platform) + `<span>${link.platform}</span>`;
+        links.appendChild(chip);
+      });
+      card.appendChild(links);
+    }
+
+    if ((a.videos||[]).length) {
+      const videos = document.createElement('div'); videos.className = 'videos';
+      a.videos.forEach(id => {
+        const wrap = document.createElement('div'); wrap.className = 'video';
+        wrap.innerHTML = `<iframe loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen src="https://www.youtube-nocookie.com/embed/${id}"></iframe>`;
+        videos.appendChild(wrap);
+      });
+      card.appendChild(videos);
+    }
+
+    return card;
+  }
+
+  function iconButton(label, title, action){
+    const b = document.createElement('button');
+    b.className = 'icon-btn'; b.title = title; b.dataset.action = action; b.textContent = label;
+    return b;
+  }
+
+  // --- Dialog (Add/Edit) ---
+  function openAdd(){
+    els.dialogTitle.textContent = 'Add Artist';
+    els.name.value = '';
+    els.videos.value = '';
+    els.editingId.value = '';
+    resetLinksEditor();
+    addLinkInput();
+    els.dialog.showModal();
+    setTimeout(() => els.name.focus(), 0);
+  }
+
+  function openEdit(id){
+    const a = state.artists.find(x => x.id === id);
+    if (!a) return;
+    els.dialogTitle.textContent = 'Edit Artist';
+    els.name.value = a.name;
+    els.videos.value = (a.videos||[]).map(v => `https://youtu.be/${v}`).join('
+');
+    els.editingId.value = id;
+    resetLinksEditor();
+    if ((a.links||[]).length) a.links.forEach(l => addLinkInput(l.url)); else addLinkInput();
+    els.dialog.showModal();
+    setTimeout(() => els.name.focus(), 0);
+  }
+
+  els.cancelDialog.addEventListener('click', () => els.dialog.close());
+
+  els.form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = els.name.value.trim();
+    if (!name) { alert('Please enter an artist name.'); return; }
+
+    const urls = Array.from(els.linksEditor.querySelectorAll('input[type="url"]'))
+      .map(i => i.value.trim()).filter(Boolean);
+    const links = urls.map(u => ({ platform: detectPlatform(u), url: u }));
+
+    const videosRaw = els.videos.value.split(/
+|,|;/).map(s => s.trim()).filter(Boolean);
+    const vids = [];
+    for (const v of videosRaw) {
+      const id = parseYouTubeId(v);
+      if (id) vids.push(id);
+    }
+
+    const existingId = els.editingId.value;
+    if (existingId) {
+      const ix = state.artists.findIndex(x => x.id === existingId);
+      if (ix !== -1) state.artists[ix] = { id: existingId, name, links, videos: vids };
+    } else {
+      state.artists.push({ id: uid(), name, links, videos: vids });
+    }
+    save(); render(); els.dialog.close();
+  });
+
+  function resetLinksEditor(){ els.linksEditor.innerHTML = ''; }
+
+  function addLinkInput(value=''){
+    const tpl = document.getElementById('linkRowTpl');
+    const node = tpl.content.firstElementChild.cloneNode(true);
+    const input = node.querySelector('input'); input.value = value; input.placeholder = exampleFor(value);
+    node.querySelector('.remove-link').addEventListener('click', () => node.remove());
+    els.linksEditor.appendChild(node);
+  }
+
+  function exampleFor(v){
+    const p = detectPlatform(v);
+    const map = {
+      'YouTube': 'https://www.youtube.com/@channel',
+      'Spotify': 'https://open.spotify.com/artist/…',
+      'SoundCloud': 'https://soundcloud.com/artist',
+      'Apple Music': 'https://music.apple.com/artist/…',
+      'Bandcamp': 'https://artist.bandcamp.com',
+      'Instagram': 'https://instagram.com/…',
+      'TikTok': 'https://www.tiktok.com/@…',
+      'X': 'https://x.com/…',
+      'Deezer': 'https://www.deezer.com/artist/…',
+      'Tidal': 'https://tidal.com/browse/artist/…',
+      'Website': 'https://your-site.com'
     };
+    return map[p] || 'https://…';
+  }
 
-    // ---------- Persistence ----------
-    const STORAGE_KEY = 'artistHub.v1';
-    const state = { artists: [], filter: '' };
+  els.addLinkRow.addEventListener('click', () => addLinkInput());
 
-    function load(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(raw){ state.artists = JSON.parse(raw); }
-        else { state.artists = demo(); save(); }
-      }catch(e){ console.warn('Load failed', e); state.artists = demo(); save(); }
+  // --- List events (Edit/Delete/Move) ---
+  els.list.addEventListener('click', (e) => {
+    const btn = e.target.closest('button.icon-btn');
+    if (!btn) return;
+    const card = e.target.closest('.card');
+    const id = card?.dataset.id;
+    if (!id) return;
+    const action = btn.dataset.action;
+    const ix = state.artists.findIndex(a => a.id === id);
+    if (ix < 0) return;
+    if (action === 'delete') {
+      if (confirm('Delete this artist?')) { state.artists.splice(ix,1); save(); render(); }
+    } else if (action === 'edit') {
+      openEdit(id);
+    } else if (action === 'move-up') {
+      if (ix > 0) { const [it] = state.artists.splice(ix,1); state.artists.splice(ix-1,0,it); save(); render(); }
+    } else if (action === 'move-down') {
+      if (ix < state.artists.length-1) { const [it] = state.artists.splice(ix,1); state.artists.splice(ix+1,0,it); save(); render(); }
     }
-    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.artists)); }
+  });
 
-    function demo(){
-      return [
-        { id: uid(), name: 'Nøxcrya', links: [ { platform: 'YouTube', url: 'https://youtube.com/@yourchannel' }, { platform: 'SoundCloud', url: 'https://soundcloud.com/yourname' } ], videos: ['dQw4w9WgXcQ'] },
-      ];
+  // --- Toolbar ---
+  els.addBtn.addEventListener('click', openAdd);
+  els.menuBtn.addEventListener('click', () => els.menuDialog.showModal());
+  els.closeMenu.addEventListener('click', () => els.menuDialog.close());
+
+  els.exportBtn.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(state.artists, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'artist-hub-export.json'; a.click();
+    setTimeout(()=> URL.revokeObjectURL(url), 2000);
+  });
+
+  els.importFile.addEventListener('change', (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (Array.isArray(data)) {
+          state.artists = data.map(x => ({ id: x.id || uid(), name: String(x.name||'Untitled'), links: (x.links||[]).map(l => ({ platform: l.platform || detectPlatform(l.url||''), url: String(l.url||'') })), videos: (x.videos||[]).filter(Boolean)}));
+          save(); render();
+          alert('Import complete.');
+        } else { alert('Invalid JSON format: expected an array'); }
+      } catch(err) { alert('Import failed: ' + (err?.message || err)); }
+      finally { e.target.value = ''; }
+    };
+    reader.readAsText(file);
+  });
+
+  // --- Search ---
+  els.search.addEventListener('input', () => { state.filter = els.search.value; render(); });
+  els.search.addEventListener('search', () => { state.filter = els.search.value; render(); });
+
+  // --- Helpers ---
+  function uid(){ return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+
+  function detectPlatform(url){
+    try{
+      const u = new URL(url); const h = u.hostname.replace('www.','');
+      if (h.includes('youtube') || h.includes('youtu.be')) return 'YouTube';
+      if (h.includes('open.spotify.com')) return 'Spotify';
+      if (h.includes('soundcloud.com')) return 'SoundCloud';
+      if (h.includes('music.apple.com')) return 'Apple Music';
+      if (h.includes('bandcamp.com')) return 'Bandcamp';
+      if (h.includes('instagram.com')) return 'Instagram';
+      if (h.includes('tiktok.com')) return 'TikTok';
+      if (h === 'x.com' || h.includes('twitter.com')) return 'X';
+      if (h.includes('deezer.com')) return 'Deezer';
+      if (h.includes('tidal.com')) return 'Tidal';
+      return 'Website';
+    }catch{ return 'Website'; }
+  }
+
+  function parseYouTubeId(input){
+    if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+    try{
+      const u = new URL(input);
+      if (u.hostname.includes('youtu.be')) return u.pathname.split('/')[1] || '';
+      if (u.searchParams.get('v')) return u.searchParams.get('v');
+      const m = u.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/); if (m) return m[1];
+    }catch{}
+    return '';
+  }
+
+  function iconSVG(platform){
+    const colorMap = {
+      'YouTube':'#FF0000',
+      'Spotify':'#1DB954',
+      'SoundCloud':'#FF5500',
+      'Apple Music':'#FA2A55',
+      'Bandcamp':'#629AA9',
+      'Instagram':'#E4405F',
+      'TikTok':'#EE1D52',
+      'X':'#1D9BF0',
+      'Deezer':'#EF5466',
+      'Tidal':'#01FFFF',
+      'Website':'#9fb0c3'
+    };
+    const fill = colorMap[platform] || '#9fb0c3';
+    switch(platform){
+      case 'YouTube':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M23 7.5c0-1.5-1.2-2.7-2.7-2.8C17.9 4.3 12 4.3 12 4.3s-5.9 0-8.3.4C2.2 4.8 1 6 1 7.5 1 9.3 1 12 1 12s0 2.7.1 4.5c.1 1.5 1.3 2.6 2.7 2.8 2.4.4 8.2.4 8.2.4s5.9 0 8.3-.4c1.5-.2 2.7-1.3 2.7-2.8C23 14.7 23 12 23 12s0-2.7 0-4.5Zm-13 7.2V9.3l6 2.7-6 2.7Z"></path></svg>`;
+      case 'Spotify':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm4.6 14.8a.9.9 0 0 1-1.23.3c-3.35-2.04-7.57-1.25-9.88-.34a.9.9 0 0 1-.68-1.68c2.67-1.08 7.38-1.98 11.2.33.44.26.59.82.3 1.23Zm1.1-3.1a1 1 0 0 1-1.36.34c-3.83-2.27-9.64-1.48-12.56-.4a1 1 0 0 1-.74-1.86c3.36-1.34 9.91-2.23 14.46.44.48.28.65.9.34 1.36Zm.2-3.2a1.1 1.1 0 0 1-1.5.38c-4.46-2.65-11.25-1.73-14.3-.48a1.1 1.1 0 0 1-.82-2.03c3.57-1.44 10.93-2.5 16.3.62.52.31.69 1 .38 1.5Z"></path></svg>`;
+      case 'SoundCloud':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M19 10.5c-1.1-2.4-3.9-3.5-6.2-2.6A5 5 0 0 0 7 13H5.5a2.5 2.5 0 1 0 0 5H19a3.5 3.5 0 1 0 0-7Z"></path></svg>`;
+      case 'Apple Music':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M16 3 8 5v10.2a2.8 2.8 0 1 0 1.5 2.5V9.2L16 7v6.2a2.8 2.8 0 1 0 1.5 2.5V3Z"></path></svg>`;
+      case 'Bandcamp':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 16 8.5 8H21l-5.5 8H3Z"></path></svg>`;
+      case 'Instagram':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7Zm5 2.8A4.2 4.2 0 1 1 7.8 12 4.2 4.2 0 0 1 12 7.8Zm0 2a2.2 2.2 0 1 0 2.2 2.2A2.2 2.2 0 0 0 12 9.8Zm5.2-3.3a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path></svg>`;
+      case 'TikTok':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M14 3h2a5 5 0 0 0 5 5v2a7 7 0 0 1-5-2v6.5A5.5 5.5 0 1 1 10.5 9H12v2a3.5 3.5 0 1 0 2 3.06V3Z"></path></svg>`;
+      case 'X':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 4h5.6l4.2 6 4.6-6H21l-6.9 9.2L21 20h-5.6l-4.2-6-4.6 6H3l7-9.3L3 4Z"></path></svg>`;
+      case 'Deezer':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 16h3v3H3v-3Zm4-4h3v7H7v-7Zm4-3h3v10h-3V9Zm4-2h3v12h-3V7Zm4-2h3v14h-3V5Z"></path></svg>`;
+      case 'Tidal':
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M7 7 12 12 17 7l3 3-5 5-3-3-3 3-5-5 3-3Z"></path></svg>`;
+      default:
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 3a7 7 0 0 1 6.93 6H12V5Z"></path></svg>`;
     }
+  }
 
-    // ---------- Rendering ----------
-    function render(){
-      const term = state.filter.trim().toLowerCase();
-      const items = !term ? state.artists : state.artists.filter(a =>
-        a.name.toLowerCase().includes(term) || a.links.some(l => (l.platform||'').toLowerCase().includes(term))
-      );
+  // --- Wire UI ---
+  els.addBtn.addEventListener('click', openAdd);
 
-      els.list.innerHTML = '';
-      if(items.length === 0){
-        const empty = document.createElement('div');
-        empty.className = 'card muted';
-        empty.style.textAlign = 'center';
-        empty.style.padding = '30px';
-        empty.textContent = 'No artists yet. Click “Add Artist” to create your first one!';
-        els.list.appendChild(empty);
-        return;
-      }
+  els.menuBtn.addEventListener('click', () => els.menuDialog.showModal());
+  els.closeMenu.addEventListener('click', () => els.menuDialog.close());
 
-      for(const a of items){ els.list.appendChild(artistCard(a)); }
-    }
+  // --- Search init ---
+  els.search.addEventListener('input', () => { state.filter = els.search.value; render(); });
+  els.search.addEventListener('search', () => { state.filter = els.search.value; render(); });
 
-    function artistCard(a){
-      const card = document.createElement('article');
-      card.className = 'card'; card.dataset.id = a.id;
+  // --- Startup: local then live ---
+  loadLocal();
+  render();
 
-      const head = document.createElement('div'); head.className = 'header';
-      const title = document.createElement('h3'); title.textContent = a.name;
-      head.appendChild(title);
-      const actions = document.createElement('div'); actions.className = 'actions';
-      actions.appendChild(iconButton('↑','Move up','move-up'));
-      actions.appendChild(iconButton('↓','Move down','move-down'));
-      actions.appendChild(iconButton('✎','Edit','edit'));
-      actions.appendChild(iconButton('🗑','Delete','delete'));
-      head.appendChild(actions);
-      card.appendChild(head);
+  // Subscribe to Firestore (updates UI without refresh)
+  onSnapshot(DATA_DOC, (snap) => {
+    const data = snap.exists() ? (snap.data() || {}) : {};
+    const arr = Array.isArray(data.artists) ? data.artists : [];
+    state.artists = arr;
+    saveLocal();   // cache for offline
+    render();
+  });
 
-      if(a.links?.length){
-        const links = document.createElement('div'); links.className = 'links';
-        a.links.forEach(link => {
-          const chip = document.createElement('a');
-          chip.className = 'link-chip'; chip.href = link.url; chip.target = '_blank' ; chip.rel = 'noopener noreferrer';
-          chip.title = link.url;
-          chip.innerHTML = iconSVG(link.platform) + `<span>${link.platform}</span>`;
-          links.appendChild(chip);
+  // --- Public helpers (optional) ---
+  window.signInWithGoogle = async () => { await signInWithPopup(auth, new GoogleAuthProvider()); };
+  window.signOutApp = async () => { await signOut(auth); };
 
-        card.appendChild(links);
-      }
+</script>
 
-      if(a.videos?.length){
-        const videos = document.createElement('div'); videos.className = 'videos';
-        a.videos.forEach(id => {
-          const wrap = document.createElement('div'); wrap.className = 'video';
-          wrap.innerHTML = `<iframe loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen src="https://www.youtube-nocookie.com/embed/${id}"></iframe>`;
-          videos.appendChild(wrap);
-
-        card.appendChild(videos);
-      }
-
-      return card;
-    }
-
-    function iconButton(label, title, action){
-      const b = document.createElement('button'); b.className = 'icon-btn'; b.title = title; b.dataset.action = action; b.textContent = label; return b;
-    }
-
-    // ---------- Dialog (Add/Edit) ----------
-    function openAdd(){
-      els.dialogTitle.textContent = 'Add Artist';
-      els.name.value = '';
-      els.videos.value = '';
-      els.editingId.value = '';
-      resetLinksEditor();
-      addLinkInput();
-      els.dialog.showModal();
-      setTimeout(() => els.name.focus(), 0);
-    }
-
-    function openEdit(id){
-      const a = state.artists.find(x => x.id === id);
-      if(!a) return;
-      els.dialogTitle.textContent = 'Edit Artist';
-      els.name.value = a.name;
-      els.videos.value = (a.videos||[]).map(v => `https://youtu.be/${v}`).join('\n');
-      els.editingId.value = id;
-      resetLinksEditor();
-      if(a.links?.length){ a.links.forEach(l => addLinkInput(l.url)); } else { addLinkInput(); }
-      els.dialog.showModal();
-      setTimeout(() => els.name.focus(), 0);
-    }
-
-    els.cancelDialog.addEventListener('click', () => els.dialog.close());
-
-    els.form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const name = els.name.value.trim();
-      if(!name){ alert('Please enter an artist name.'); return; }
-
-      const urls = Array.from(els.linksEditor.querySelectorAll('input[type="url"]'))
-        .map(i => i.value.trim()).filter(Boolean);
-      const links = urls.map(u => ({ platform: detectPlatform(u), url: u }));
-
-      const videosRaw = els.videos.value.split(/\n|,|;/).map(s => s.trim()).filter(Boolean);
-      const vids = [];
-      for(const v of videosRaw){
-        const id = parseYouTubeId(v);
-        if(id) vids.push(id);
-      }
-
-      const existingId = els.editingId.value;
-      if(existingId){
-        const ix = state.artists.findIndex(x => x.id === existingId);
-        if(ix !== -1){ state.artists[ix] = { id: existingId, name, links, videos: vids }; }
-      } else {
-        state.artists.push({ id: uid(), name, links, videos: vids });
-      }
-      save(); render(); els.dialog.close();
-
-    function resetLinksEditor(){ els.linksEditor.innerHTML = ''; }
-
-    function addLinkInput(value=''){
-      const tpl = document.getElementById('linkRowTpl');
-      const node = tpl.content.firstElementChild.cloneNode(true);
-      const input = node.querySelector('input'); input.value = value; input.placeholder = exampleFor(value);
-      node.querySelector('.remove-link').addEventListener('click', () => node.remove());
-      els.linksEditor.appendChild(node);
-    }
-
-    function exampleFor(v){
-      const p = detectPlatform(v);
-      const map = {
-        'YouTube': 'https://www.youtube.com/@channel',
-        'Spotify': 'https://open.spotify.com/artist/…',
-        'SoundCloud': 'https://soundcloud.com/artist',
-        'Apple Music': 'https://music.apple.com/artist/…',
-        'Bandcamp': 'https://artist.bandcamp.com',
-        'Instagram': 'https://instagram.com/…',
-        'TikTok': 'https://www.tiktok.com/@…',
-        'X': 'https://x.com/…',
-        'Deezer': 'https://www.deezer.com/artist/…',
-        'Tidal': 'https://tidal.com/browse/artist/…',
-        'Website': 'https://your-site.com'
-      };
-      return map[p] || 'https://…';
-    }
-
-    els.addLinkRow.addEventListener('click', () => addLinkInput());
-
-    // ---------- List events (Edit/Delete/Move) ----------
-    els.list.addEventListener('click', (e) => {
-      const btn = e.target.closest('button.icon-btn');
-      if(!btn) return;
-      const card = e.target.closest('.card');
-      const id = card?.dataset.id;
-      if(!id) return;
-      const action = btn.dataset.action;
-      const ix = state.artists.findIndex(a => a.id === id);
-      if(ix < 0) return;
-      if(action === 'delete'){
-        if(confirm('Delete this artist?')){ state.artists.splice(ix,1); save(); render(); }
-      }else if(action === 'edit'){
-        openEdit(id);
-      }else if(action === 'move-up'){
-        if(ix>0){ const [it] = state.artists.splice(ix,1); state.artists.splice(ix-1,0,it); save(); render(); }
-      }else if(action === 'move-down'){
-        if(ix < state.artists.length-1){ const [it] = state.artists.splice(ix,1); state.artists.splice(ix+1,0,it); save(); render(); }
-      }
-
-    // ---------- Toolbar ----------
-    els.addBtn.addEventListener('click', openAdd);
-
-    // Menu dialog
-    els.menuBtn.addEventListener('click', () => els.menuDialog.showModal());
-    els.closeMenu.addEventListener('click', () => els.menuDialog.close());
-
-    els.exportBtn.addEventListener('click', () => {
-      const blob = new Blob([JSON.stringify(state.artists, null, 2)], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'artist-hub-export.json'; a.click(); setTimeout(()=> URL.revokeObjectURL(url), 2000);
-
-    els.importFile.addEventListener('change', (e) => {
-      const file = e.target.files?.[0]; if(!file) return;
-      const reader = new FileReader(); reader.onload = () => {
-        try{ const data = JSON.parse(reader.result);
-          if(Array.isArray(data)){
-            state.artists = data.map(x => ({ id: x.id || uid(), name: String(x.name||'Untitled'), links: (x.links||[]).map(l => ({ platform: l.platform || detectPlatform(l.url||''), url: String(l.url||'') })), videos: (x.videos||[]).filter(Boolean)}));
-            save(); render();
-            alert('Import complete.');
-          } else { alert('Invalid JSON format: expected an array'); }
-        }catch(err){ alert('Import failed: ' + err.message); }
-        finally { e.target.value = ''; }
-      };
-      reader.readAsText(file);
-
-    // ---------- Search ----------
-    els.search.addEventListener('input', () => { state.filter = els.search.value; render(); });
-    els.search.addEventListener('search', () => { state.filter = els.search.value; render(); });
-
-    // ---------- Helpers ----------
-    function uid(){ return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
-
-    function detectPlatform(url){
-      try{ const u = new URL(url); const h = u.hostname.replace('www.','');
-        if(h.includes('youtube') || h.includes('youtu.be')) return 'YouTube';
-        if(h.includes('open.spotify.com')) return 'Spotify';
-        if(h.includes('soundcloud.com')) return 'SoundCloud';
-        if(h.includes('music.apple.com')) return 'Apple Music';
-        if(h.includes('bandcamp.com')) return 'Bandcamp';
-        if(h.includes('instagram.com')) return 'Instagram';
-        if(h.includes('tiktok.com')) return 'TikTok';
-        if(h === 'x.com' || h.includes('twitter.com')) return 'X';
-        if(h.includes('deezer.com')) return 'Deezer';
-        if(h.includes('tidal.com')) return 'Tidal';
-        return 'Website';
-      }catch{ return 'Website'; }
-    }
-
-    function parseYouTubeId(input){
-      if(/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
-      try{
-        const u = new URL(input);
-        if(u.hostname.includes('youtu.be')) return u.pathname.split('/')[1] || '';
-        if(u.searchParams.get('v')) return u.searchParams.get('v');
-        const m = u.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/); if(m) return m[1];
-      }catch{}
-      return '';
-    }
-
-    function iconSVG(platform){
-      const colorMap = {
-        'YouTube':'#FF0000',
-        'Spotify':'#1DB954',
-        'SoundCloud':'#FF5500',
-        'Apple Music':'#FA2A55',
-        'Bandcamp':'#629AA9',
-        'Instagram':'#E4405F',
-        'TikTok':'#EE1D52',
-        'X':'#1D9BF0',
-        'Deezer':'#EF5466',
-        'Tidal':'#01FFFF',
-        'Website':'#9fb0c3'
-      };
-      const fill = colorMap[platform] || '#9fb0c3';
-      switch(platform){
-        case 'YouTube':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M23 7.5c0-1.5-1.2-2.7-2.7-2.8C17.9 4.3 12 4.3 12 4.3s-5.9 0-8.3.4C2.2 4.8 1 6 1 7.5 1 9.3 1 12 1 12s0 2.7.1 4.5c.1 1.5 1.3 2.6 2.7 2.8 2.4.4 8.2.4 8.2.4s5.9 0 8.3-.4c1.5-.2 2.7-1.3 2.7-2.8C23 14.7 23 12 23 12s0-2.7 0-4.5Zm-13 7.2V9.3l6 2.7-6 2.7Z"></path></svg>`;
-        case 'Spotify':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm4.6 14.8a.9.9 0 0 1-1.23.3c-3.35-2.04-7.57-1.25-9.88-.34a.9.9 0 0 1-.68-1.68c2.67-1.08 7.38-1.98 11.2.33.44.26.59.82.3 1.23Zm1.1-3.1a1 1 0 0 1-1.36.34c-3.83-2.27-9.64-1.48-12.56-.4a1 1 0 0 1-.74-1.86c3.36-1.34 9.91-2.23 14.46.44.48.28.65.9.34 1.36Zm.2-3.2a1.1 1.1 0 0 1-1.5.38c-4.46-2.65-11.25-1.73-14.3-.48a1.1 1.1 0 0 1-.82-2.03c3.57-1.44 10.93-2.5 16.3.62.52.31.69 1 .38 1.5Z"></path></svg>`;
-        case 'SoundCloud':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M19 10.5c-1.1-2.4-3.9-3.5-6.2-2.6A5 5 0 0 0 7 13H5.5a2.5 2.5 0 1 0 0 5H19a3.5 3.5 0 1 0 0-7Z"></path></svg>`;
-        case 'Apple Music':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M16 3 8 5v10.2a2.8 2.8 0 1 0 1.5 2.5V9.2L16 7v6.2a2.8 2.8 0 1 0 1.5 2.5V3Z"></path></svg>`;
-        case 'Bandcamp':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 16 8.5 8H21l-5.5 8H3Z"></path></svg>`;
-        case 'Instagram':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7Zm5 2.8A4.2 4.2 0 1 1 7.8 12 4.2 4.2 0 0 1 12 7.8Zm0 2a2.2 2.2 0 1 0 2.2 2.2A2.2 2.2 0 0 0 12 9.8Zm5.2-3.3a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path></svg>`;
-        case 'TikTok':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M14 3h2a5 5 0 0 0 5 5v2a7 7 0 0 1-5-2v6.5A5.5 5.5 0 1 1 10.5 9H12v2a3.5 3.5 0 1 0 2 3.06V3Z"></path></svg>`;
-        case 'X':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 4h5.6l4.2 6 4.6-6H21l-6.9 9.2L21 20h-5.6l-4.2-6-4.6 6H3l7-9.3L3 4Z"></path></svg>`;
-        case 'Deezer':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 16h3v3H3v-3Zm4-4h3v7H7v-7Zm4-3h3v10h-3V9Zm4-2h3v12h-3V7Zm4-2h3v14h-3V5Z"></path></svg>`;
-        case 'Tidal':
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M7 7 12 12 17 7l3 3-5 5-3-3-3 3-5-5 3-3Z"></path></svg>`;
-        default:
-          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 3a7 7 0 0 1 6.93 6H12V5Z"></path></svg>`;
-      }
-    }
-
-    // ---------- Init ----------
-    load(); render();
-  })();
-
-
-  </script>
 </body>
 </html>
