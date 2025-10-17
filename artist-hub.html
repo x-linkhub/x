@@ -391,8 +391,7 @@ body.editor .actions { display: flex !important; }
     if (!a) return;
     els.dialogTitle && (els.dialogTitle.textContent = "Edit Artist");
     els.name && (els.name.value = a.name || "");
-    if (els.videos) els.videos.value = (a.videos || []).map(v => `https://youtu.be/${v}`).join("
-");
+    if (els.videos) els.videos.value = (a.videos || []).map(v => `https://youtu.be/${v}`).join("");
     els.editingId && (els.editingId.value = id);
     resetLinksEditor();
     if ((a.links || []).length) a.links.forEach(l => addLinkInput(l.url)); else addLinkInput();
