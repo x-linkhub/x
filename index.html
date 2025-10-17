@@ -1771,7 +1771,7 @@ const allSubcategories = useMemo(()=>{ const set=new Set(); for(const l of links
                     Showing <span className="font-medium">{filtered.length}</span> {filtered.length===1?'link':'links'} across categories
                   </div>
                   <GroupedResults
-  groups={someGroups}
+  groups={groupedByCat}
   active={active}
   onSelect={setActive}
   onTogglePin={onTogglePin}
