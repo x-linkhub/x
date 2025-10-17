@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Artist Hub</title>
+  <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='96'>🎵</text></svg>">
+  <style>
+    :root{
+      --bg: #0b0f14;
+      --surface: #121821;
+      --surface-2: #151c26;
+      --text: #e8eef6;
+      --muted: #9fb0c3;
+      --accent: #8b5cf6;
+      --accent-2:#22d3ee;
+      --card-radius: 18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font: 16px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 1200px at 80% -10%, rgba(139,92,246,.15), transparent 45%),
+                  radial-gradient(900px 900px at 0% 10%, rgba(34,211,238,.12), transparent 40%),
+                  var(--bg);
+      color:var(--text);
+      letter-spacing:.2px;
+    }
+    a{color:inherit}
+    .container{max-width:1000px; margin:0 auto; padding:24px;}
+
+    /* Header */
+    header{ position:sticky; top:0; z-index:10; backdrop-filter: blur(8px);
+      background: color-mix(in oklab, var(--bg) 85%, transparent);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .bar{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 24px;}
+    .left, .right{display:flex; align-items:center; gap:10px}
+
+    .btn{ display:inline-flex; align-items:center; gap:10px; padding:10px 14px; border-radius:12px;
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      border:1px solid rgba(255,255,255,.06);
+      color:var(--text); text-decoration:none; cursor:pointer;
+      transition:.2s transform,.2s background,.2s border-color, .2s opacity; box-shadow: var(--shadow);
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.12)}
+    .btn:active{ transform: translateY(0)}
+    .btn.primary{ background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 30%, var(--surface)), var(--surface-2)); border-color: color-mix(in oklab, var(--accent) 45%, rgba(255,255,255,.06)); }
+    .btn.ghost{ background: transparent; border-color: rgba(255,255,255,.12)}
+
+    /* Center title with shimmer */
+    .title{ position:relative; font-weight:800; font-size: clamp(22px, 3.4vw, 38px); letter-spacing:.5px; text-transform:uppercase; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip:text; color: transparent; }
+    .title .shimmer{position:absolute; inset:0; background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,.7) 50%, transparent 100%); transform: skewX(-20deg) translateX(-120%); filter: blur(4px); mix-blend-mode: overlay; animation: shimmer 3.8s infinite;}
+    @keyframes shimmer{ 60%{ transform: skewX(-20deg) translateX(120%) } 100%{ transform: skewX(-20deg) translateX(120%) } }
+
+    /* Utility */
+    .spacer{flex:1}
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    .muted{ color: var(--muted); font-size:.92rem }
+    .hidden{ display:none !important }
+
+    /* Search */
+    .search{ width:100%; margin:18px 0 10px; display:flex; gap:10px; }
+    .search input{ flex:1; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,.09); background: linear-gradient(180deg, var(--surface), var(--surface-2)); color:var(--text); outline:none; box-shadow: inset 0 2px 10px rgba(0,0,0,.25); }
+
+    /* Cards */
+    .list{ display:flex; flex-direction:column; gap:16px; }
+    .card{ background: linear-gradient(180deg, color-mix(in oklab, var(--surface) 70%, #000), var(--surface-2)); border:1px solid rgba(255,255,255,.07); border-radius: var(--card-radius); box-shadow: var(--shadow); padding:16px 16px 14px; position:relative; overflow:hidden; }
+    .card:hover{ border-color: rgba(255,255,255,.14)}
+    .card .header{ display:flex; align-items:center; gap:10px; }
+    .card h3{ margin:0; font-size:1.05rem; letter-spacing:.3px }
+
+    .links{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .link-chip{ display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); text-decoration:none; }
+    .link-chip:hover{ border-color: rgba(255,255,255,.16) }
+    .link-chip svg{ width:18px; height:18px }
+
+    .videos{ display:grid; grid-template-columns: 1fr; gap:10px; margin-top:12px }
+    @media (min-width: 760px){ .videos{ grid-template-columns: 1fr 1fr } }
+    .video{ position:relative; width:100%; padding-top:56.25%; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,.08) }
+    .video iframe{ position:absolute; inset:0; width:100%; height:100%; border:0 }
+
+    /* Actions */
+    .actions{ margin-left:auto; display:flex; gap:6px }
+    .icon-btn{ background:transparent; border:1px solid rgba(255,255,255,.14); padding:8px; border-radius:10px; cursor:pointer; color:var(--text)}
+    .icon-btn:hover{ border-color: rgba(255,255,255,.25) }
+
+    footer{ opacity:.8; font-size:.9rem; padding:26px 0; }
+
+    /* Modal (Add/Edit) */
+    dialog{ border:0; border-radius:16px; background: linear-gradient(180deg, var(--surface), var(--surface-2)); color:var(--text); width:min(680px, 92vw); box-shadow: var(--shadow); }
+    dialog::backdrop{ background: rgba(0,0,0,.5); backdrop-filter: blur(2px); }
+    .modal-head{ display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.08) }
+    .modal-body{ padding:14px 16px 18px; display:grid; gap:12px }
+    .field label{ display:block; font-size:.9rem; color:var(--muted); margin-bottom:6px }
+    .field input, .field textarea{ width:100%; padding:12px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background: linear-gradient(180deg, var(--surface), var(--surface-2)); color:var(--text); outline:none; }
+
+    .links-editor{ display:grid; gap:8px }
+    .link-row{ display:grid; grid-template-columns: 1fr auto; gap:8px }
+
+    /* Auth UI */
+    .auth{ position: relative; display:flex; align-items:center; gap:10px }
+    .avatar{ width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.2); object-fit:cover; box-shadow: var(--shadow) }
+    .user-btn{ display:flex; align-items:center; gap:8px }
+    .chev{ font-size: 12px; opacity:.7 }
+    .user-menu{ position:absolute; right:0; top:48px; min-width: 220px; background: linear-gradient(180deg, var(--surface), var(--surface-2)); border:1px solid rgba(255,255,255,.1); border-radius: 12px; box-shadow: var(--shadow); padding:10px; display:none }
+    .user-menu.open{ display:block }
+    .user-menu .muted{ font-size:.85rem }
+
+    /* Safer default: hide editing UI unless editor class is present */
+    #addBtn, .actions { display: none !important; }
+    body.editor #addBtn { display: inline-flex !important; }
+    body.editor .actions { display: flex !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <div class="left">
+        <!-- (optional) back button spot -->
+      </div>
+      <div class="spacer"></div>
+      <div class="row">
+        <h1 class="title" aria-label="Artist Hub">Artist Hub<div class="shimmer"></div></h1>
+      </div>
+      <div class="spacer"></div>
+      <div class="right auth">
+        <button id="addBtn" class="btn primary" title="Add artist">＋ Artist</button>
+        <button id="loginBtn" class="btn user-btn" title="Sign in with Google">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18"><path fill="#ea4335" d="M12 10.2v3.9h5.5c-.24 1.5-1.67 4.4-5.5 4.4-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.6 3.8 14.5 3 12 3 6.9 3 2.9 7 2.9 12S6.9 21 12 21c6.9 0 9.2-4.8 9.2-7.2 0-.5-.1-.9-.2-1.3H12z"/><path fill="#34a853" d="M3.5 7.9l3.2 2.3C7.6 8 9.6 6.6 12 6.6c1.9 0 3.2.8 3.9 1.5l2.7-2.6C16.6 3.8 14.5 3 12 3 8.3 3 5.2 5.2 3.5 7.9z"/><path fill="#fbbc05" d="M12 21c2.9 0 5.4-1 7.2-2.6l-3-2.4c-1 .7-2.3 1.1-4.2 1.1-3.8 0-7-2.6-8.1-6l-3.3 2.6C2.3 18.9 6.7 21 12 21z"/><path fill="#4285f4" d="M21.2 13.8c.1-.4.2-.9.2-1.3 0-.5-.1-.9-.2-1.3H12v3.9h9.2z"/></svg>
+          <span>Sign in</span>
+        </button>
+        <button id="userBtn" class="btn user-btn hidden" title="Account">
+          <img id="avatar" class="avatar" alt="" />
+          <span id="userName" class="muted"></span>
+          <span class="chev">▾</span>
+        </button>
+        <div id="userMenu" class="user-menu">
+          <div id="userEmail" class="muted" style="margin:4px 6px 10px"></div>
+          <button id="logoutBtn" class="btn" style="width:100%">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="search">
+      <input id="searchInput" type="search" placeholder="Search artists… (name or platform)"/>
+    </div>
+
+    <section id="list" class="list" aria-live="polite"></section>
+
+    <footer class="container">
+      <div class="muted">2025.<strong>AH - Firebase v2</strong></div>
+    </footer>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <dialog id="artistDialog">
+    <form id="artistForm" method="dialog">
+      <div class="modal-head">
+        <strong id="dialogTitle">Add Artist</strong>
+        <div class="row">
+          <button type="button" id="cancelDialog" class="btn ghost">Cancel</button>
+          <button type="submit" class="btn primary">Save</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="artistName">Artist name</label>
+          <input id="artistName" required placeholder="e.g., Nøxcrya"/>
+        </div>
+
+        <div class="field">
+          <label>Platform links <small>(paste URLs – icons auto‑detect & colored)</small></label>
+          <div id="linksEditor" class="links-editor"></div>
+          <div class="row">
+            <button type="button" id="addLinkRow" class="btn">＋ Add link</button>
+            <span class="muted">Examples: https://youtube.com/@name • https://open.spotify.com/artist/… • https://soundcloud.com/…</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="videos">Featured YouTube videos <small>(one URL per line)</small></label>
+          <textarea id="videos" rows="4" placeholder="https://youtu.be/xxxxxxxxxxx&#10;https://www.youtube.com/watch?v=xxxxxxxxxxx"></textarea>
+        </div>
+
+        <input type="hidden" id="editingId" />
+      </div>
+    </form>
+  </dialog>
+
+  <template id="linkRowTpl">
+    <div class="link-row">
+      <input type="url" placeholder="Paste platform URL" />
+      <button type="button" class="btn ghost remove-link">✕</button>
+    </div>
+  </template>
+
+  <script type="module">
+    // --- Firebase SDKs ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+    // --- Config (from your message) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvWLRZjEyldAYZXfK6KV2H9_P5fLOsGMw",
+      authDomain: "link-library-1dfc8.firebaseapp.com",
+      projectId: "link-library-1dfc8",
+      storageBucket: "link-library-1dfc8.firebasestorage.app",
+      messagingSenderId: "368329977627",
+      appId: "1:368329977627:web:625d20247d6aea3b9cadbe"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    await setPersistence(auth, browserLocalPersistence);
+    const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
+
+    // Email allow‑list: only these can add/edit/delete
+    const ALLOWED_EMAILS = [
+      "xq.dannybs@gmail.com",
+      "dafuke88@gmail.com"
+    ];
+
+    // State
+    const state = { artists: [], filter: "", maxOrder: 0 };
+    let __user = null;
+    let __isEditor = false;
+
+    // Elements
+    const els = {
+      list: document.getElementById('list'),
+      addBtn: document.getElementById('addBtn'),
+      search: document.getElementById('searchInput'),
+      dialog: document.getElementById('artistDialog'),
+      form: document.getElementById('artistForm'),
+      dialogTitle: document.getElementById('dialogTitle'),
+      cancelDialog: document.getElementById('cancelDialog'),
+      name: document.getElementById('artistName'),
+      linksEditor: document.getElementById('linksEditor'),
+      addLinkRow: document.getElementById('addLinkRow'),
+      videos: document.getElementById('videos'),
+      editingId: document.getElementById('editingId'),
+      loginBtn: document.getElementById('loginBtn'),
+      userBtn: document.getElementById('userBtn'),
+      userMenu: document.getElementById('userMenu'),
+      avatar: document.getElementById('avatar'),
+      userName: document.getElementById('userName'),
+      userEmail: document.getElementById('userEmail'),
+      logoutBtn: document.getElementById('logoutBtn')
+    };
+
+    // --- Auth UI wiring ---
+    els.loginBtn.addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        alert(e?.message || 'Sign‑in failed');
+      }
+    });
+
+    els.userBtn.addEventListener('click', () => {
+      els.userMenu.classList.toggle('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!els.userBtn.contains(e.target) && !els.userMenu.contains(e.target)) {
+        els.userMenu.classList.remove('open');
+      }
+    });
+
+    els.logoutBtn.addEventListener('click', async () => {
+      await signOut(auth);
+      els.userMenu.classList.remove('open');
+    });
+
+    function applyEditorUI(){
+      document.body.classList.toggle('editor', __isEditor);
+      els.loginBtn.classList.toggle('hidden', !!__user);
+      els.userBtn.classList.toggle('hidden', !__user);
+      if (__user) {
+        els.avatar.src = __user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(__user.displayName||'User')}&size=128&background=121821&color=e8eef6`;
+        els.avatar.alt = __user.displayName || __user.email || 'Avatar';
+        els.userName.textContent = (__user.displayName || '').split(' ')[0] || 'Account';
+        els.userEmail.textContent = __user.email || '';
+      } else {
+        els.avatar.removeAttribute('src');
+        els.userName.textContent = '';
+        els.userEmail.textContent = '';
+      }
+    }
+
+    onAuthStateChanged(auth, (u) => {
+      __user = u || null;
+      __isEditor = !!u && ALLOWED_EMAILS.includes((u.email||'').toLowerCase());
+      applyEditorUI();
+    });
+
+    // --- Firestore live query (public read) ---
+    const colRef = collection(db, 'artists');
+    const qRef = query(colRef, orderBy('order','asc'));
+    onSnapshot(qRef, (snap) => {
+      const arr = [];
+      let max = 0;
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        arr.push({ id: docSnap.id, name: d.name||'Untitled', links: d.links||[], videos: d.videos||[], order: d.order ?? 0 });
+        if ((d.order ?? 0) > max) max = d.order ?? 0;
+      });
+      state.artists = arr;
+      state.maxOrder = max;
+      render();
+    });
+
+    // --- Rendering ---
+    function render(){
+      const term = state.filter.trim().toLowerCase();
+      const items = !term ? state.artists : state.artists.filter(a =>
+        a.name.toLowerCase().includes(term) || a.links.some(l => (l.platform||'').toLowerCase().includes(term))
+      );
+
+      els.list.innerHTML = '';
+      if(items.length === 0){
+        const empty = document.createElement('div');
+        empty.className = 'card muted';
+        empty.style.textAlign = 'center';
+        empty.style.padding = '30px';
+        empty.textContent = 'No artists yet. Sign in as editor and press “＋ Artist”.';
+        els.list.appendChild(empty);
+        return;
+      }
+
+      for(const a of items){ els.list.appendChild(artistCard(a)); }
+    }
+
+    function artistCard(a){
+      const card = document.createElement('article');
+      card.className = 'card'; card.dataset.id = a.id;
+
+      const head = document.createElement('div'); head.className = 'header';
+      const title = document.createElement('h3'); title.textContent = a.name;
+      head.appendChild(title);
+      const actions = document.createElement('div'); actions.className = 'actions';
+      actions.appendChild(iconButton('↑','Move up','move-up'));
+      actions.appendChild(iconButton('↓','Move down','move-down'));
+      actions.appendChild(iconButton('✎','Edit','edit'));
+      actions.appendChild(iconButton('🗑','Delete','delete'));
+      head.appendChild(actions);
+      card.appendChild(head);
+
+      if(a.links?.length){
+        const links = document.createElement('div'); links.className = 'links';
+        a.links.forEach(link => {
+          const chip = document.createElement('a');
+          chip.className = 'link-chip'; chip.href = link.url; chip.target = '_blank'; chip.rel = 'noopener noreferrer';
+          chip.title = link.url;
+          chip.innerHTML = iconSVG(link.platform) + `<span>${link.platform}</span>`;
+          links.appendChild(chip);
+        });
+        card.appendChild(links);
+      }
+
+      if(a.videos?.length){
+        const videos = document.createElement('div'); videos.className = 'videos';
+        a.videos.forEach(id => {
+          const wrap = document.createElement('div'); wrap.className = 'video';
+          wrap.innerHTML = `<iframe loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen src="https://www.youtube-nocookie.com/embed/${id}"></iframe>`;
+          videos.appendChild(wrap);
+        });
+        card.appendChild(videos);
+      }
+
+      return card;
+    }
+
+    function iconButton(label, title, action){
+      const b = document.createElement('button'); b.className = 'icon-btn'; b.title = title; b.dataset.action = action; b.textContent = label; return b;
+    }
+
+    // --- Dialog (Add/Edit) ---
+    function openAdd(){
+      els.dialogTitle.textContent = 'Add Artist';
+      els.name.value = '';
+      els.videos.value = '';
+      els.editingId.value = '';
+      resetLinksEditor();
+      addLinkInput();
+      els.dialog.showModal();
+      setTimeout(() => els.name.focus(), 0);
+    }
+
+    function openEdit(id){
+      const a = state.artists.find(x => x.id === id);
+      if(!a) return;
+      els.dialogTitle.textContent = 'Edit Artist';
+      els.name.value = a.name;
+      els.videos.value = (a.videos||[]).map(v => `https://youtu.be/${v}`).join('\n');
+      els.editingId.value = id;
+      resetLinksEditor();
+      if(a.links?.length){ a.links.forEach(l => addLinkInput(l.url)); } else { addLinkInput(); }
+      els.dialog.showModal();
+      setTimeout(() => els.name.focus(), 0);
+    }
+
+    els.cancelDialog.addEventListener('click', () => els.dialog.close());
+
+    els.form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if(!__isEditor){ alert('Editors only'); return; }
+
+      const name = els.name.value.trim();
+      if(!name){ alert('Please enter an artist name.'); return; }
+
+      const urls = Array.from(els.linksEditor.querySelectorAll('input[type="url"]'))
+        .map(i => i.value.trim()).filter(Boolean);
+      const links = urls.map(u => ({ platform: detectPlatform(u), url: u }));
+
+      const videosRaw = els.videos.value.split(/\n|,|;/).map(s => s.trim()).filter(Boolean);
+      const vids = [];
+      for(const v of videosRaw){
+        const id = parseYouTubeId(v);
+        if(id) vids.push(id);
+      }
+
+      const existingId = els.editingId.value;
+      try{
+        if(existingId){
+          await updateDoc(doc(db, 'artists', existingId), { name, links, videos: vids });
+        } else {
+          const order = state.maxOrder + 1;
+          await addDoc(collection(db, 'artists'), { name, links, videos: vids, order, createdAt: serverTimestamp() });
+        }
+        els.dialog.close();
+      }catch(err){
+        alert('Save failed: ' + (err?.message||err));
+      }
+    });
+
+    function resetLinksEditor(){ els.linksEditor.innerHTML = ''; }
+
+    function addLinkInput(value=''){
+      const tpl = document.getElementById('linkRowTpl');
+      const node = tpl.content.firstElementChild.cloneNode(true);
+      const input = node.querySelector('input'); input.value = value; input.placeholder = exampleFor(value);
+      node.querySelector('.remove-link').addEventListener('click', () => node.remove());
+      els.linksEditor.appendChild(node);
+    }
+    els.addLinkRow.addEventListener('click', () => addLinkInput());
+
+    function exampleFor(v){
+      const p = detectPlatform(v);
+      const map = {
+        'YouTube': 'https://www.youtube.com/@channel',
+        'Spotify': 'https://open.spotify.com/artist/…',
+        'SoundCloud': 'https://soundcloud.com/artist',
+        'Apple Music': 'https://music.apple.com/artist/…',
+        'Bandcamp': 'https://artist.bandcamp.com',
+        'Instagram': 'https://instagram.com/…',
+        'TikTok': 'https://www.tiktok.com/@…',
+        'X': 'https://x.com/…',
+        'Deezer': 'https://www.deezer.com/artist/…',
+        'Tidal': 'https://tidal.com/browse/artist/…',
+        'Website': 'https://your-site.com'
+      };
+      return map[p] || 'https://…';
+    }
+
+    // --- List events (Edit/Delete/Move) ---
+    els.list.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button.icon-btn');
+      if(!btn) return;
+      if(!__isEditor){ alert('Editors only'); return; }
+      const card = e.target.closest('.card');
+      const id = card?.dataset.id; if(!id) return;
+      const action = btn.dataset.action;
+      const idx = state.artists.findIndex(a => a.id === id);
+      if(idx < 0) return;
+      const cur = state.artists[idx];
+
+      if(action === 'delete'){
+        if(confirm('Delete this artist?')){
+          try{ await deleteDoc(doc(db, 'artists', id)); }catch(err){ alert('Delete failed: '+(err?.message||err)); }
+        }
+      }else if(action === 'edit'){
+        openEdit(id);
+      }else if(action === 'move-up' || action === 'move-down'){
+        const swapIdx = action === 'move-up' ? idx-1 : idx+1;
+        if(swapIdx < 0 || swapIdx >= state.artists.length) return;
+        const other = state.artists[swapIdx];
+        try{
+          // swap order values
+          await Promise.all([
+            updateDoc(doc(db, 'artists', cur.id), { order: other.order ?? 0 }),
+            updateDoc(doc(db, 'artists', other.id), { order: cur.order ?? 0 })
+          ]);
+        }catch(err){ alert('Reorder failed: ' + (err?.message||err)); }
+      }
+    });
+
+    // --- Toolbar ---
+    els.addBtn.addEventListener('click', () => {
+      if(!__isEditor){ alert('Editors only'); return; }
+      openAdd();
+    });
+
+    // --- Search ---
+    els.search.addEventListener('input', () => { state.filter = els.search.value; render(); });
+    els.search.addEventListener('search', () => { state.filter = els.search.value; render(); });
+
+    // --- Helpers ---
+    function detectPlatform(url){
+      try{ const u = new URL(url); const h = u.hostname.replace('www.','');
+        if(h.includes('youtube') || h.includes('youtu.be')) return 'YouTube';
+        if(h.includes('open.spotify.com')) return 'Spotify';
+        if(h.includes('soundcloud.com')) return 'SoundCloud';
+        if(h.includes('music.apple.com')) return 'Apple Music';
+        if(h.includes('bandcamp.com')) return 'Bandcamp';
+        if(h.includes('instagram.com')) return 'Instagram';
+        if(h.includes('tiktok.com')) return 'TikTok';
+        if(h === 'x.com' || h.includes('twitter.com')) return 'X';
+        if(h.includes('deezer.com')) return 'Deezer';
+        if(h.includes('tidal.com')) return 'Tidal';
+        return 'Website';
+      }catch{ return 'Website'; }
+    }
+
+    function parseYouTubeId(input){
+      if(/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+      try{
+        const u = new URL(input);
+        if(u.hostname.includes('youtu.be')) return u.pathname.split('/')[1] || '';
+        if(u.searchParams.get('v')) return u.searchParams.get('v');
+        const m = u.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/); if(m) return m[1];
+      }catch{}
+      return '';
+    }
+
+    function iconSVG(platform){
+      const colorMap = {
+        'YouTube':'#FF0000',
+        'Spotify':'#1DB954',
+        'SoundCloud':'#FF5500',
+        'Apple Music':'#FA2A55',
+        'Bandcamp':'#629AA9',
+        'Instagram':'#E4405F',
+        'TikTok':'#EE1D52',
+        'X':'#1D9BF0',
+        'Deezer':'#EF5466',
+        'Tidal':'#01FFFF',
+        'Website':'#9fb0c3'
+      };
+      const fill = colorMap[platform] || '#9fb0c3';
+      switch(platform){
+        case 'YouTube':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M23 7.5c0-1.5-1.2-2.7-2.7-2.8C17.9 4.3 12 4.3 12 4.3s-5.9 0-8.3.4C2.2 4.8 1 6 1 7.5 1 9.3 1 12 1 12s0 2.7.1 4.5c.1 1.5 1.3 2.6 2.7 2.8 2.4.4 8.2.4 8.2.4s5.9 0 8.3-.4c1.5-.2 2.7-1.3 2.7-2.8C23 14.7 23 12 23 12s0-2.7 0-4.5Zm-13 7.2V9.3l6 2.7-6 2.7Z"></path></svg>`;
+        case 'Spotify':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm4.6 14.8a.9.9 0 0 1-1.23.3c-3.35-2.04-7.57-1.25-9.88-.34a.9.9 0 0 1-.68-1.68c2.67-1.08 7.38-1.98 11.2.33.44.26.59.82.3 1.23Zm1.1-3.1a1 1 0 0 1-1.36.34c-3.83-2.27-9.64-1.48-12.56-.4a1 1 0 0 1-.74-1.86c3.36-1.34 9.91-2.23 14.46.44.48.28.65.9.34 1.36Zm.2-3.2a1.1 1.1 0 0 1-1.5.38c-4.46-2.65-11.25-1.73-14.3-.48a1.1 1.1 0 0 1-.82-2.03c3.57-1.44 10.93-2.5 16.3.62.52.31.69 1 .38 1.5Z"></path></svg>`;
+        case 'SoundCloud':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M19 10.5c-1.1-2.4-3.9-3.5-6.2-2.6A5 5 0 0 0 7 13H5.5a2.5 2.5 0 1 0 0 5H19a3.5 3.5 0 1 0 0-7Z"></path></svg>`;
+        case 'Apple Music':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M16 3 8 5v10.2a2.8 2.8 0 1 0 1.5 2.5V9.2L16 7v6.2a2.8 2.8 0 1 0 1.5 2.5V3Z"></path></svg>`;
+        case 'Bandcamp':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 16 8.5 8H21l-5.5 8H3Z"></path></svg>`;
+        case 'Instagram':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7Zm5 2.8A4.2 4.2 0 1 1 7.8 12 4.2 4.2 0 0 1 12 7.8Zm0 2a2.2 2.2 0 1 0 2.2 2.2A2.2 2.2 0 0 0 12 9.8Zm5.2-3.3a1.1 1.1 0 1 1-1.1 1.1 1.1 1.1 0 0 1 1.1-1.1Z"></path></svg>`;
+        case 'TikTok':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M14 3h2a5 5 0 0 0 5 5v2a7 7 0 0 1-5-2v6.5A5.5 5.5 0 1 1 10.5 9H12v2a3.5 3.5 0 1 0 2 3.06V3Z"></path></svg>`;
+        case 'X':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 4h5.6l4.2 6 4.6-6H21l-6.9 9.2L21 20h-5.6l-4.2-6-4.6 6H3l7-9.3L3 4Z"></path></svg>`;
+        case 'Deezer':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M3 16h3v3H3v-3Zm4-4h3v7H7v-7Zm4-3h3v10h-3V9Zm4-2h3v12h-3V7Zm4-2h3v14h-3V5Z"></path></svg>`;
+        case 'Tidal':
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M7 7 12 12 17 7l3 3-5 5-3-3-3 3-5-5 3-3Z"></path></svg>`;
+        default:
+          return `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${fill}" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 3a7 7 0 0 1 6.93 6H12V5Z"></path></svg>`;
+      }
+    }
+
+    // Kickoff first render
+    render();
+  </script>
+</body>
+</html>
