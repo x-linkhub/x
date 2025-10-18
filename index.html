@@ -35,7 +35,7 @@ boot-card">
         <li data-k="data">Data <span>…</span></li>
         <li data-k="ui">UI <span>…</span></li>
       </ul>
-      <div class="boot-hint">If it stalls, allow <code>unpkg.com</code> in your blocker.</div>
+      <div class="boot-hint">Loading..... <code>unpkg.com</code> přístup povolen...</div>
     </div>
   </div>
 
@@ -104,7 +104,7 @@ body, main, .overflow-auto{
         <li data-k="data">Data <span>…</span></li>
         <li data-k="ui">UI <span>…</span></li>
       </ul>
-      <div class="boot-hint">If it stalls, allow <code>unpkg.com</code> in your blocker.</div>
+      <div class="boot-hint">Loading..... <code>unpkg.com</code> přístup povolen....</div>
     </div>
   </div>
   <div id="root"></div>
@@ -388,7 +388,7 @@ body, main, .overflow-auto{
                 className={`px-3 py-1.5 ${searchScope==='category' ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900' : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800'}`}
                 title="Search only in current category"
               >
-                Category
+                Kategorie
               </button>
             </div>
           </div>
@@ -446,7 +446,7 @@ body, main, .overflow-auto{
           
           {/* Total links count pill */}
           <div className="hidden sm:inline-flex items-center rounded-full border border-emerald-500/30 bg-gradient-to-r from-emerald-600/20 to-fuchsia-600/20 px-3 py-1 text-xs font-medium text-emerald-200 select-none">
-            <span className="opacity-80 mr-1">Saved:</span>
+            <span className="opacity-80 mr-1">Celkem:</span>
             <span className="font-bold text-emerald-300">{totalCount}</span>
             <span className="opacity-80 ml-1">/ URLs</span>
           </div>
@@ -592,7 +592,7 @@ return { header, others };
             ))}
           </div>
 
-          <div className="text-sm font-semibold mb-2">Categories</div>
+          <div className="text-sm font-semibold mb-2">Kategorie</div>
           <nav className="space-y-1">
             {structure.others.map(cat => (
               <div key={cat.key}>
@@ -668,7 +668,7 @@ return { header, others };
                   </div>
                 )}
                 <div className="mt-1">
-                  <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={e=> e.stopPropagation()} className="text-xs text-blue-400 hover:underline">Open ↗</a>
+                  <a href={link.url} target="_blank" rel="noopener noreferrer" onClick={e=> e.stopPropagation()} className="text-xs text-blue-400 hover:underline">Otevřít web ↗</a>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-xl">{isEditor && (<button onClick={(e)=>{ e.stopPropagation(); onTogglePin(link.id, !!link.pinned); }} title="Pin">{link.pinned?'📌':'📍'}</button>
@@ -731,7 +731,7 @@ function DetailsPanel({ link, getPreview, onAddTag, onRemoveTag }){
   if(!link) {
     return (
       <aside className="w-80 shrink-0 p-4 border-l border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
-        <div className="text-sm text-zinc-500">Select a link to see details.</div>
+        <div className="text-sm text-zinc-500">Vyber odkaz → dešifruj detaily....</div>
       </aside>
     );
   }
@@ -748,7 +748,7 @@ function DetailsPanel({ link, getPreview, onAddTag, onRemoveTag }){
 
       <div className="mb-3 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
         <div className="p-3">
-          <div className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Site preview</div>
+          <div className="text-xs uppercase tracking-wide text-zinc-500 mb-1">Náhled webu</div>
           {loading && <div className="text-sm text-zinc-500">Fetching info…</div>}
           {!loading && meta && (<>
             {meta.image && <div className="mb-2"><img alt="" src={meta.image} className="w-full h-28 object-cover" /></div>}
@@ -760,7 +760,7 @@ function DetailsPanel({ link, getPreview, onAddTag, onRemoveTag }){
         </div>
       </div>
 
-      <div className="mb-2 text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">Notes</div>
+      <div className="mb-2 text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">Poznámky</div>
       <p className="text-sm mb-3 whitespace-pre-wrap">{link.desc}</p>
 
       {/* Tags editor */}
@@ -1450,8 +1450,10 @@ const updateLink = async (id, payload) => {
       desc: payload.desc || '',
       categories: cats,
       subcategories: subs,
+      tags: uniqueTags(payload.tags || []),   // ← persist tags from the modal
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+
     logAction('EDIT', `Edited: ${payload.title || id}`);
     setShowEdit(false);
     setEditingItem(null);
@@ -1460,6 +1462,7 @@ const updateLink = async (id, payload) => {
     alert('Edit failed: ' + (err?.message || err));
   }
 };
+
 
 // DELETE — Firestore
 const removeLink = async (id) => {
@@ -1684,7 +1687,7 @@ async function onToggleBookmark(linkId){
 
       const clearActivity = ()=> setActivity([]);
 const headerTitle = useMemo(()=>{
-        const base = activeCat ? `${activeCat}` : (query.trim()? 'Search Results' : 'All Links');
+        const base = activeCat ? `${activeCat}` : (query.trim()? 'Výsledky vyhledávání' : 'All Links');
         const withSub = activeSub ? `${base} — ${activeSub}` : base;
         return `${withSub} (${filtered.length})`;
       },[activeCat, activeSub, filtered.length, query]);
@@ -1735,8 +1738,8 @@ const allSubcategories = useMemo(()=>{ const set=new Set(); for(const l of links
                 <section className="w-full max-w-3xl mx-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white/60 dark:bg-zinc-900/40 backdrop-blur p-6 shadow-2xl mt-6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
-                      <div className="text-2xl md:text-3xl font-bold tracking-tight">Welcome back <span className="align-[-2px]">👋</span></div>
-                      <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">Ready to add a link or open settings?</div>
+                      <div className="text-2xl md:text-3xl font-bold tracking-tight">Vítej zpět <span className="align-[-2px]">👋</span></div>
+                      <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">Boss fight: tvůj čas. Loot: divný, ale dobrý odkazy....</div>
                     </div>
                     <div className="flex items-center gap-2">
 					{isEditor && (
@@ -1768,7 +1771,7 @@ const allSubcategories = useMemo(()=>{ const set=new Set(); for(const l of links
               { (inAllTagSearch || inAllTextSearch) ? (
                 <div>
                   <div className="text-sm text-zinc-500 mb-2">
-                    Showing <span className="font-medium">{filtered.length}</span> {filtered.length===1?'link':'links'} across categories
+                    Detekován <span className="font-medium">{filtered.length}</span> {filtered.length===1?'odkaz':'odkazů'} napříč kategoriemi
                   </div>
                   <GroupedResults
   groups={groupedByCat}
