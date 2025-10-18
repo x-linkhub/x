@@ -1159,7 +1159,7 @@ function AddEditLinkModal({
             <div className="flex gap-2 p-3 border-b border-zinc-200 dark:border-zinc-800">
               <button onClick={()=>setTab('backup')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='backup'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Záloha dat</button>
               <button onClick={()=>setTab('activity')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='activity'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Log</button>
-              <button onClick={()=>setTab('descriptions')} className={`px-3 py-1.5 rounded-xl ${tab==='descriptions'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Podrobnosti Kategorií</button>
+              <button onClick={()=>setTab('descriptions')} className={`px-3 py-1.5 rounded-xl ${tab==='descriptions'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Popis-Kategorie</button>
             </div>
 
             <div className="flex-1 overflow-auto p-4">
@@ -1167,13 +1167,13 @@ function AddEditLinkModal({
                 <div className="space-y-6">
                   <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4">
                     <div className="font-medium mb-2">Export</div>
-                    <p className="text-sm text-zinc-500 mb-3">Download a JSON backup of your links, category icons, and subcategory icons.</p>
+                    <p className="text-sm text-zinc-500 mb-3">Stáhnout JSON data do PC</p>
                     <button onClick={onExport} className="px-3 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">Export JSON</button>
                   </section>
 
                   <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4">
                     <div className="font-medium mb-2">Import</div>
-                    <p className="text-sm text-zinc-500 mb-3">Load a JSON backup. You can merge into the current list (default) or replace everything.</p>
+                    <p className="text-sm text-zinc-500 mb-3">Načíst JSON data z PC. You can merge into the current list (default) or replace everything.</p>
                     <div className="flex items-center gap-3 mb-3">
                       <input ref={fileRef} type="file" accept="application/json" onChange={onPickFile} className="text-sm" />
                       <label className="flex items-center gap-2 text-sm">
@@ -1204,7 +1204,7 @@ function AddEditLinkModal({
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
                   <aside className="md:col-span-4 space-y-4">
                     <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3">
-                      <div className="font-medium mb-2">Category</div>
+                      <div className="font-medium mb-2">Kategorie</div>
                       <div className="max-h-[40vh] overflow-auto space-y-1">
                         {categories.map(cat => (
                           <button key={cat}
@@ -1217,7 +1217,7 @@ function AddEditLinkModal({
                       </div>
                     </section>
                     <section className="rounded-2xl border border-zinc-200 dark:border-zinc-800 p-3">
-                      <div className="font-medium mb-2">Subcategory</div>
+                      <div className="font-medium mb-2">Pod-Kategorie</div>
                       <div className="max-h-[40vh] overflow-auto space-y-1">
                         {(subcategoriesByCat[localCat]||[]).map(sub => (
                           <button key={sub}
@@ -1235,7 +1235,7 @@ function AddEditLinkModal({
 
                   <section className="md:col-span-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-4 flex flex-col">
                     <div className="flex items-center justify-between mb-3">
-                      <div className="font-medium">Description</div>
+                      <div className="font-medium">Popisek</div>
                       <div className="text-xs text-zinc-500">{localCat && localSub ? `${localCat} — ${localSub}` : 'Pick a category & subcategory'}</div>
                     </div>
                     <textarea
