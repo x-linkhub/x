@@ -281,25 +281,56 @@ body, main, .overflow-auto{
     }
 
     // --- Small Emoji Picker Popover (MVP) -----------------------------------
-    function EmojiPickerPopover({ onPick, onClose }){
-      const ref = useRef(null);
-      useClickOutside(ref, onClose);
-      const [custom, setCustom] = useState('');
-      return (
-        <div ref={ref} className="absolute z-30 mt-1 w-64 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg p-2">
-          <div className="text-xs text-zinc-500 mb-2">Pick an emoji</div>
-          <div className="grid grid-cols-8 gap-1 mb-2 text-lg">
-            {COMMON_EMOJIS.map(e => (
-              <button key={e} onClick={()=>{ onPick(e); onClose(); }} className="px-1 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">{e}</button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <input value={custom} onChange={e=>setCustom(e.target.value)} placeholder="paste emoji" className="flex-1 text-sm px-2 py-1 rounded bg-zinc-100 dark:bg-zinc-800 outline-none" />
-            <button onClick={()=>{ if(custom.trim()){ onPick(custom.trim()); onClose(); } }} className="text-sm px-2 py-1 rounded bg-zinc-900 text-white dark:bg-white dark:text-zinc-900">Set</button>
-          </div>
+    function EmojiPickerPopover({ onPick, onClose }) {
+  const ref = React.useRef(null);
+  useClickOutside(ref, onClose);
+  const [custom, setCustom] = React.useState('');
+
+  const EMOJIS = COMMON_EMOJIS; // reuse your array
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+      <div
+        ref={ref}
+        className="w-[min(720px,92vw)] max-h-[80vh] overflow-auto rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl p-3"
+      >
+        <div className="sticky top-0 bg-white/70 dark:bg-zinc-900/70 backdrop-blur flex items-center justify-between pb-2 mb-2 border-b border-zinc-200 dark:border-zinc-800">
+          <div className="text-sm font-medium">Pick emoji</div>
+          <button onClick={onClose} className="text-base px-2 py-1 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800">✕</button>
         </div>
-      );
-    }
+
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-2 mb-3 text-2xl">
+          {EMOJIS.map(e => (
+            <button
+              key={e}
+              onClick={() => { onPick(e); onClose(); }}
+              className="h-11 grid place-items-center rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+              title={e}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            value={custom}
+            onChange={e => setCustom(e.target.value)}
+            placeholder="paste emoji"
+            className="flex-1 text-sm px-3 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700"
+          />
+          <button
+            onClick={() => { const v = custom.trim(); if (v) { onPick(v); onClose(); } }}
+            className="text-sm px-3 py-2 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900"
+          >
+            Set
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
     // --- Top Bar -------------------------------------------------------------
     function TopBar({ query, setQuery, onSearchGo, onAddLink, searchScope, setSearchScope, tagOptions, onOpenSettings, totalCount, user, onLogin, onLogout, isEditor}){
