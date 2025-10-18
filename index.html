@@ -1152,15 +1152,14 @@ function AddEditLinkModal({
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-4xl h-[85vh] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
-              <div className="text-lg font-semibold">Settings</div>
+              <div className="text-lg font-semibold">Nastavení</div>
               <button onClick={onClose} className="text-xl">✕</button>
             </div>
 
             <div className="flex gap-2 p-3 border-b border-zinc-200 dark:border-zinc-800">
-              <button onClick={()=>setTab('backup')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='backup'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Backup</button>
-              <button onClick={()=>setTab('activity')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='activity'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Activity Log</button>
-              <button onClick={()=>setTab('descriptions')} className={`px-3 py-1.5 rounded-xl ${tab==='descriptions'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Descriptions</button>
-              <button disabled className="px-3 py-1.5 rounded-xl text-sm opacity-50 pointer-events-none">Preferences (soon)</button>
+              <button onClick={()=>setTab('backup')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='backup'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Záloha dat</button>
+              <button onClick={()=>setTab('activity')} className={`px-3 py-1.5 rounded-xl text-sm ${tab==='activity'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Log</button>
+              <button onClick={()=>setTab('descriptions')} className={`px-3 py-1.5 rounded-xl ${tab==='descriptions'?'bg-zinc-100 dark:bg-zinc-800':''}`}>Podrobnosti Kategorií</button>
             </div>
 
             <div className="flex-1 overflow-auto p-4">
