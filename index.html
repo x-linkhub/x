@@ -1,13 +1,13 @@
-<!doctype html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon"
-  href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='96'>💀</text></svg>">
-  <title>Link Hub</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>html,body{height:100%}body{margin:0}
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+<head><meta content="dark" name="color-scheme"/><script>document.documentElement.classList.add('dark');</script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'&gt;&lt;text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-size='96'&gt;💀&lt;/text&gt;&lt;/svg&gt;" rel="icon"/>
+<title>Link Hub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>html,body{height:100%}body{margin:0}
 /* Boot overlay styles */
 .boot-overlay{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(120% 120% at 50% 0,#0b0b0b,#000);z-index:50}
 .boot-card{width:min(620px,92vw);border-radius:20px;border:1px solid #2a2a2a;background:rgba(18,18,18,.8);backdrop-filter:blur(6px);padding:26px 28px;box-shadow:0 10px 50px rgba(0,0,0,.5)}
@@ -89,26 +89,66 @@ body, main, .overflow-auto{
 /* ====================================================================== */
 
 </style>
-</head>
-<body class="bg-zinc-900 text-zinc-100">
-  <!-- Boot Checks Overlay -->
-  <div id="boot" class="boot-overlay">
-    <div class="boot-card">
-      <div class="boot-logo">💀</div>
-      <div class="boot-title">Link Hub</div>
-      <ul class="boot-list">
-        <li data-k="tailwind">Tailwind <span>…</span></li>
-        <li data-k="react">React <span>…</span></li>
-        <li data-k="reactdom">ReactDOM <span>…</span></li>
-        <li data-k="babel">Babel <span>…</span></li>
-        <li data-k="data">Data <span>…</span></li>
-        <li data-k="ui">UI <span>…</span></li>
-      </ul>
-      <div class="boot-hint">Loading..... <code>unpkg.com</code> přístup povolen....</div>
-    </div>
-  </div>
-  <div id="root"></div>
+<style>
+/* === Mobile optimizations === */
+:root { color-scheme: dark; }
 
+/* Safe area utilities for notches */
+.p-safe-b { padding-bottom: env(safe-area-inset-bottom); }
+.p-safe-t { padding-top: env(safe-area-inset-top); }
+
+/* Make dialogs full-screen on small screens */
+@media (max-width: 640px){
+  dialog {
+    width: 100vw !important;
+    max-width: none !important;
+    height: 100dvh !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  dialog .modal-body,
+  dialog form > .modal-body {
+    height: calc(100dvh - 56px) !important; /* header height */
+    overflow: auto !important;
+  }
+  /* Compact padding for common containers */
+  .container, main, .content, .page-wrap { padding-left: 16px !important; padding-right: 16px !important; }
+}
+
+/* Touch-friendly defaults */
+@media (max-width: 640px){
+  button, input[type="text"], input[type="search"], input[type="url"], input[type="email"], select, textarea {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom on input focus */
+  }
+}
+
+/* Responsive embed helper */
+.video-16x9 { position: relative; width: 100%; padding-top: 56.25%; border-radius: 14px; overflow: hidden; }
+.video-16x9 > iframe, .video-16x9 > video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Sticky header polish */
+.sticky-top { position: sticky; top: 0; z-index: 40; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: rgba(9,9,11,0.6); }
+</style></head>
+<body class="bg-zinc-900 text-zinc-100 mobile-ready">
+<!-- Boot Checks Overlay -->
+<div class="boot-overlay" id="boot">
+<div class="boot-card">
+<div class="boot-logo">💀</div>
+<div class="boot-title">Link Hub</div>
+<ul class="boot-list">
+<li data-k="tailwind">Tailwind <span>…</span></li>
+<li data-k="react">React <span>…</span></li>
+<li data-k="reactdom">ReactDOM <span>…</span></li>
+<li data-k="babel">Babel <span>…</span></li>
+<li data-k="data">Data <span>…</span></li>
+<li data-k="ui">UI <span>…</span></li>
+</ul>
+<div class="boot-hint">Loading..... <code>unpkg.com</code> přístup povolen....</div>
+</div>
+</div>
+<div id="root"></div>
 <script>
     (function(){
       function mark(k, ok, msg){
@@ -145,12 +185,11 @@ body, main, .overflow-auto{
     })();
   </script>
 <!-- React 18 UMD + Babel for JSX in the browser -->
-  <script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script crossorigin="anonymous" src="https://unpkg.com/@babel/standalone/babel.min.js" onerror="var el=document.getElementById('overlay'); if(!el){el=document.createElement('div'); el.id='overlay'; document.body.appendChild(el);} el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);color:#fff;padding:16px;z-index:99999'; el.innerHTML = '<div style=\'max-width:900px;margin:40px auto;background:#111;padding:16px;border-radius:12px\'>Failed to load Babel from unpkg.com. Allow unpkg.com or disable script blocker.</div>';"></script>
-
-  <!-- Simple runtime error overlay so blank screens are obvious -->
-  <script>
+<script crossorigin="anonymous" src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin="anonymous" src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script crossorigin="anonymous" onerror="var el=document.getElementById('overlay'); if(!el){el=document.createElement('div'); el.id='overlay'; document.body.appendChild(el);} el.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);color:#fff;padding:16px;z-index:99999'; el.innerHTML = '&lt;div style=\'max-width:900px;margin:40px auto;background:#111;padding:16px;border-radius:12px\'&gt;Failed to load Babel from unpkg.com. Allow unpkg.com or disable script blocker.&lt;/div&gt;';" src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<!-- Simple runtime error overlay so blank screens are obvious -->
+<script>
     window.addEventListener('error', function(e){
       var el = document.getElementById('overlay');
       if(!el){ el = document.createElement('div'); el.id='overlay'; document.body.appendChild(el); }
@@ -161,7 +200,7 @@ body, main, .overflow-auto{
       '</div>';
     });
   </script>
-  <script>
+<script>
     window.addEventListener('unhandledrejection', function(e){
       var el = document.getElementById('overlay');
       if(!el){ el = document.createElement('div'); el.id='overlay'; document.body.appendChild(el); }
@@ -173,14 +212,11 @@ body, main, .overflow-auto{
       '</div>';
     });
   </script>
-
-
-  
-  <!-- Firebase (Compat) for Google Sign-In) -->
-  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
-  <script>
+<!-- Firebase (Compat) for Google Sign-In) -->
+<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+<script>
   window.__FIREBASE_CONFIG = {
     apiKey: "AIzaSyBvWLRZjEyldAYZXfK6KV2H9_P5fLOsGMw",
     authDomain: "link-library-1dfc8.firebaseapp.com",
@@ -200,7 +236,6 @@ body, main, .overflow-auto{
     window.__bootFail && window.__bootFail('data', 'Firebase init failed');
   }
 </script>
-
 <script type="text/babel">
     const { useMemo, useState, useEffect, useRef } = React;
 	
@@ -431,7 +466,7 @@ body, main, .overflow-auto{
               value={query}
               onChange={onInputChange}
               onKeyDown={onInputKeyDown}
-              placeholder="Search links or DuckDuckGo — try typing #tag"
+              placeholder="Hledej odkazy nebo skrze DuckDuckGo — vyhledávání podle #tagu"
               className="w-full rounded-2xl pl-10 pr-16 py-2 outline-none bg-zinc-100 dark:bg-zinc-800 border border-transparent focus:border-zinc-300 dark:focus:border-zinc-700 text-sm" />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 select-none">🔎</span>
 
